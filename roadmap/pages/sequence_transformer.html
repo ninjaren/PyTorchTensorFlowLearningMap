@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>序列與 Transformer｜進階方向路線圖</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="container">
+<a class="back" href="../index.html">← 回進階方向地圖</a>
+<span class="tag">方向二</span>
+<h1>序列與 Transformer：讓模型「看懂」順序</h1>
+<p class="subtitle">上一站的圖片是「空間上」有關係，這站的資料是「順序上」有關係——例如一句話、一段逐月的銷售數字。</p>
+
+<h2>為什麼「順序」是另一種麻煩</h2>
+<div class="card">
+<p style="margin-bottom:0;">「我 吃 蘋果」跟「蘋果 吃 我」用的是同一組字，順序不同，意思完全相反。線性層跟上一站的卷積層，天生都不理解「順序」這件事——它們看到的就是一堆數字，不知道「這個數字排在前面那個數字後面」有沒有意義。要處理這種「前後有關係」的資料，需要專門設計的架構。</p>
+</div>
+
+<h2>解法的名字：RNN 到 Transformer 的演進</h2>
+<p>最早的解法叫 <strong>RNN（循環神經網路）</strong>：一個數字接一個數字依序讀進去，每讀一個就更新一次「記憶」，有點像「邊讀邊在心裡累積印象」。缺點是「序列太長時，前面讀到的東西容易被忘掉」，而且因為是依序處理，沒辦法平行加速計算。<strong>Transformer</strong>（這也是這整個 AI 浪潮裡最重要的架構之一，AI Agent 學習地圖裡 LLM 那站提過的「大腦」本體用的就是它）換了一套做法：用 <strong>注意力機制（Attention）</strong> 讓每個位置可以直接「回頭看」序列裡任何其他位置，不用依序一步步傳遞記憶，既能記得更久遠的關係，又能平行計算、訓練速度快得多。</p>
+
+<h2>之後查資料時，會遇到的關鍵字</h2>
+<table>
+<tr><th>名詞</th><th>在做什麼</th><th>對應函式庫/類別</th></tr>
+<tr><td>RNN / LSTM</td><td>依序讀取序列，邊讀邊累積記憶</td><td><code>nn.LSTM</code>/<code>layers.LSTM</code></td></tr>
+<tr><td>注意力機制</td><td>讓每個位置能直接參考序列中任何其他位置</td><td><code>nn.MultiheadAttention</code>/<code>layers.MultiHeadAttention</code></td></tr>
+<tr><td>位置編碼</td><td>讓平行處理所有字的 Transformer，還能分辨誰在前面、誰在後面</td><td>通常內建在 Transformer 層／模型裡，不太需要自己手刻</td></tr>
+<tr><td>預訓練語言模型</td><td>別人已經用海量文字訓練好的 Transformer，直接拿來微調</td><td><code>transformers</code> 函式庫（Hugging Face，支援兩套框架）</td></tr>
+</table>
+
+<div class="deep-dive">
+<span class="deep-dive-badge">深入機制（進階，可選讀）</span>
+<p class="subtitle">想知道 Attention 到底在「注意」什麼、Transformer 少了 RNN 那種「依序讀」要怎麼還知道誰在前面，這裡多講一點。</p>
+
+<h2>1. Attention 在算什麼：每個字都「問」一次「誰跟我有關」</h2>
+<p>想像你在幫一句話做翻譯，要決定某個字該怎麼翻時，你不會只看這個字本身，而是回頭掃過整句話，問自己：「這句話裡，哪幾個字跟我現在這個字最有關係？」——離得近的字不一定重要，離得遠的字也可能超相關（例如代名詞「它」指的是誰，常常要往回看好幾個字）。Attention 幫句子裡 <strong>每一個字</strong> 都問了一次這個問題：拿自己（<strong>Query</strong>，「我想知道什麼」）去跟句子裡每個字（<strong>Key</strong>，「我能提供什麼線索」）比對相關程度，算出一組分數，再用這組分數決定要把每個字的內容（<strong>Value</strong>，「實際的意思」）「聽」多大聲——相關的字權重高、不相關的字權重低，加權混合之後，就是這個字在這句話脈絡下真正的意思。Query、Key、Value 三個都來自同一句話時，這個動作就叫 <strong>自注意力（Self-Attention）</strong>。</p>
+
+<h2>2. 位置編碼：拿掉了「依序讀」，怎麼還知道誰在前面</h2>
+<p>RNN 天生理解順序，因為它本來就是一個字接一個字依序讀進去的——順序本身就寫在「讀到的時間點」裡。Transformer 為了能平行計算，把這個「依序讀」的限制整個拿掉，所有字是同時丟進去處理的——代價是它完全不知道「誰在前面、誰在後面」：「我 吃 蘋果」跟「蘋果 吃 我」如果不做額外處理，在它眼裡長得會一模一樣。解法是在每個字的向量上，額外疊加一組跟位置有關的數字（<strong>位置編碼，Positional Encoding</strong>，通常用不同頻率的 sin／cos 波形算出來），讓「這是第一個字」「這是第五個字」這種資訊被偷偷夾帶進每個字的表示裡，模型才有辦法分辨順序。</p>
+
+<h2>3. 兩套框架怎麼寫最小的 Attention</h2>
+<div class="framework-compare">
+<div class="fw-block"><div class="fw-label pytorch">PyTorch</div><pre>import torch
+import torch.nn as nn
+
+attn = nn.MultiheadAttention(embed_dim=8, num_heads=2, batch_first=True)
+
+x = torch.rand(1, 5, 8)  # 1句話、5個字、每個字用8個數字表示
+out, weights = attn(x, x, x)  # Query=Key=Value=x，就是自注意力
+
+print(out.shape)  # torch.Size([1, 5, 8])
+print(weights.shape)  # torch.Size([1, 5, 5])　每個字對每個字的關注程度</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow</div><pre>import tensorflow as tf
+from tensorflow.keras import layers
+
+attn = layers.MultiHeadAttention(num_heads=2, key_dim=4)
+
+x = tf.random.uniform((1, 5, 8))
+out = attn(query=x, key=x, value=x)  # 一樣是自注意力
+
+print(out.shape)  # (1, 5, 8)</pre></div>
+</div>
+</div>
+
+<div class="nav-links">
+<a href="vision_cnn.html">← 上一站：影像與 CNN</a>
+<a href="distributed_training.html">看看方向之三：分散式訓練 →</a>
+</div>
+</div>
+</body>
+</html>

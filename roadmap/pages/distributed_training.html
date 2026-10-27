@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>分散式訓練｜進階方向路線圖</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="container">
+<a class="back" href="../index.html">← 回進階方向地圖</a>
+<span class="tag">方向三</span>
+<h1>分散式訓練：一張 GPU 不夠用時</h1>
+<p class="subtitle">「訓練迴圈」子地圖教的寫法，預設都是跑在一張 GPU 上。當模型太大、或資料太多，一張 GPU 練不動（或練太慢）時，就要考慮分散式訓練。</p>
+
+<h2>兩種「不夠用」，對應兩種分法</h2>
+<div class="card">
+<p style="margin-bottom:0;">把訓練想成一間工廠趕訂單：如果 <strong>訂單量太大</strong>（資料太多），解法是多開幾條生產線，每條線各自處理一部分訂單，最後把結果匯總——這叫 <strong>資料平行（Data Parallelism）</strong>，是最常見、最好理解的做法：同一個模型複製到每張 GPU 上，每張 GPU 處理不同一批資料。如果 <strong>單一產品本身太巨大</strong>（模型太大，一張 GPU 的記憶體根本放不下整個模型），就要把模型本身拆開，一部分放在這張 GPU、一部分放在那張 GPU——這叫 <strong>模型平行（Model Parallelism）</strong>，做起來複雜得多，通常只有訓練超大型模型（例如數十億參數的語言模型）才會真正需要。</p>
+</div>
+
+<h2>兩套框架的切入方式不太一樣</h2>
+<p>PyTorch 提供 <code>DistributedDataParallel</code>，概念上貼近「你自己掌控怎麼把資料切開、怎麼把多張 GPU 的梯度同步」，彈性大但要寫的設定也多；TensorFlow 提供 <code>tf.distribute.Strategy</code> 系列（例如 <code>MirroredStrategy</code>），走的是一貫的「包裝起來讓你少改程式碼」風格——很多時候只要把模型跟訓練程式碼包進一個 <code>strategy.scope()</code>，其他幾乎不用改。</p>
+
+<h2>之後查資料時，會遇到的關鍵字</h2>
+<table>
+<tr><th>名詞</th><th>在做什麼</th><th>對應函式庫/類別</th></tr>
+<tr><td>資料平行</td><td>模型複製到多張 GPU，各自算不同批次的資料</td><td><code>DistributedDataParallel</code>/<code>MirroredStrategy</code></td></tr>
+<tr><td>模型平行</td><td>單一模型拆成幾塊，分別放在不同 GPU</td><td><code>torch.distributed.pipeline</code>、DeepSpeed、Megatron</td></tr>
+<tr><td>梯度同步</td><td>多張 GPU 算完各自的梯度後，怎麼合併成一個共同的更新</td><td>All-Reduce（底層通訊演算法）</td></tr>
+</table>
+
+<div class="nav-links">
+<a href="sequence_transformer.html">← 上一站：序列與 Transformer</a>
+<a href="mixed_precision_onnx.html">看看方向之四：混合精度與 ONNX →</a>
+</div>
+</div>
+</body>
+</html>

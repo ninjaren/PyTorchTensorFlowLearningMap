@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>完整範例：手寫數字分類器｜PyTorch / TensorFlow 學習地圖</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="container">
+<a class="back" href="../home.html">← 所有主題地圖</a>
+<span class="tag">完整範例</span>
+<h1>從資料到能用的手寫數字分類器</h1>
+<p class="subtitle">前面六站（張量、自動微分、建立神經網路、訓練迴圈、資料管線、模型儲存與部署）教的都是各自獨立的積木。這一頁把六塊積木接成一條線，從一份真實資料開始，一路做到一支「輸入一張手寫數字圖片、吐回它是 0~9 哪個數字」的程式——這就是「學完這些到底能幹嘛」最直接的答案：一支簡化版的圖片辨識功能，你現在已經有能力做出來。</p>
+
+<div class="quote-box">
+ 最終成品：餵給程式一張 28×28 的手寫數字圖片，它會回傳一個 0~9 的數字，而且準確率能到 9 成以上。手機拍照辨識文件上的手寫數字、掃描單據自動讀取金額，背後的核心邏輯就是這一套流程——差別只在資料換成更複雜的圖片、模型換成更強的架構（下面最後會提到怎麼往那個方向升級）。
+</div>
+
+<h2>完整程式碼：從頭到尾串起來</h2>
+<p>下面是整支程式一次看完的樣子，每一段都加了註解——不用先懂每一行在幹嘛，往下滑到對應的 Step 會有逐段的白話解釋。</p>
+<div class="fw-block" style="margin-bottom:16px;"><div class="fw-label pytorch">PyTorch（完整版）</div><pre># ===== Step 1：準備資料 =====
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
+
+transform = transforms.ToTensor()   # 圖片轉成張量，像素壓到 0~1
+train_data = datasets.MNIST(root="./data", train=True, download=True, transform=transform)
+train_loader = DataLoader(train_data, batch_size=64, shuffle=True)   # 一次吐 64 筆、順序打散
+
+# ===== Step 2：定義模型 =====
+import torch
+import torch.nn as nn
+
+class DigitClassifier(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.flatten = nn.Flatten()              # 28x28 的格子攤平成 784 個數字
+        self.layer1 = nn.Linear(28 * 28, 128)     # 784 個數字壓縮成 128 個
+        self.relu = nn.ReLU()                     # 加一點非線性，模型才學得動複雜規律
+        self.layer2 = nn.Linear(128, 10)          # 128 個數字變成 10 個分數，對應 0~9
+
+    def forward(self, x):
+        x = self.flatten(x)
+        x = self.relu(self.layer1(x))
+        return self.layer2(x)                     # 回傳 10 個分數（還沒變成機率）
+
+model = DigitClassifier()
+
+# ===== Step 3：訓練迴圈 =====
+import torch.optim as optim
+
+loss_fn = nn.CrossEntropyLoss()                   # 分類問題常用的打分方式
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+for epoch in range(3):                            # 整份資料重複看 3 輪
+    for images, labels in train_loader:           # 一次拿一批（64 張圖）
+        pred = model(images)                      # 模型猜一次
+        loss = loss_fn(pred, labels)               # 跟正確答案比對，算出猜得多離譜
+
+        optimizer.zero_grad()                      # 先清空上一次留下的梯度
+        loss.backward()                             # 算出這次該往哪個方向調整
+        optimizer.step()                            # 真正調整模型參數
+
+    print(f"epoch {epoch}, loss={loss.item():.4f}")  # 看 loss 有沒有隨訓練下降
+
+# ===== Step 4：存檔 =====
+torch.save(model.state_dict(), "digit_classifier.pth")
+
+# ===== Step 5：包成一支能被呼叫的函式 =====
+def predict(image_tensor):
+    loaded = DigitClassifier()                                  # 先建好一樣的空模型架構
+    loaded.load_state_dict(torch.load("digit_classifier.pth"))  # 把存好的參數讀回來
+    loaded.eval()                                                # 切換成「推論模式」，不是訓練模式
+
+    with torch.no_grad():                                        # 推論不用算梯度，省資源
+        logits = loaded(image_tensor.unsqueeze(0))                # 補一個 batch 維度再丟進模型
+        return logits.argmax(dim=1).item()                        # 10 個分數裡取最高分那個當答案
+
+# predict(某張手寫數字圖片) -> 例如回傳 7</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow（完整版）</div><pre># ===== Step 1：準備資料 =====
+import tensorflow as tf
+
+(x_train, y_train), _ = tf.keras.datasets.mnist.load_data()
+x_train = x_train / 255.0   # 像素值從 0~255 壓到 0~1
+
+train_dataset = (
+    tf.data.Dataset.from_tensor_slices((x_train, y_train))
+    .shuffle(10000)          # 順序打散
+    .batch(64)                # 一次吐 64 筆
+)
+
+# ===== Step 2：定義模型 =====
+from tensorflow.keras import layers
+
+model = tf.keras.Sequential([
+    layers.Flatten(input_shape=(28, 28)),       # 28x28 的格子攤平成 784 個數字
+    layers.Dense(128, activation="relu"),        # 壓成 128 個數字，加一點非線性
+    layers.Dense(10),                            # 輸出 10 個分數，對應 0~9
+])
+
+# ===== Step 3：訓練迴圈 =====
+from tensorflow.keras import losses, optimizers
+
+model.compile(
+    optimizer=optimizers.Adam(learning_rate=0.001),
+    loss=losses.SparseCategoricalCrossentropy(from_logits=True),   # 分類問題常用的打分方式
+)
+
+model.fit(train_dataset, epochs=3)   # 整份資料重複看 3 輪，fit() 內部自動做完整個訓練迴圈
+
+# ===== Step 4：存檔 =====
+model.save("digit_classifier")
+
+# ===== Step 5：包成一支能被呼叫的函式 =====
+def predict(image_array):
+    loaded = tf.keras.models.load_model("digit_classifier")   # 架構＋參數一起讀回來
+    logits = loaded(image_array[None, ...])                    # 補一個 batch 維度再丟進模型
+    return int(tf.argmax(logits, axis=1)[0])                    # 10 個分數裡取最高分那個當答案
+
+# predict(某張手寫數字圖片) -> 例如回傳 7</pre></div>
+
+<h2>Step 1：準備資料——這次用真的資料，不是隨便亂數</h2>
+<p>「資料管線」子地圖教的 Dataset／DataLoader、<code>tf.data</code>，前面都是拿 <code>torch.rand()</code> 這種隨機數字示範。這裡換成真正的 <strong>MNIST 手寫數字資料集</strong>（6 萬張別人已經標好答案的手寫數字圖片），兩套框架都內建了一行就能下載、載入的工具，概念跟前面學的完全一樣——只是資料來源從「亂數產生」換成「真的下載下來」。</p>
+<div class="framework-compare">
+<div class="fw-block"><div class="fw-label pytorch">PyTorch</div><pre>from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
+
+transform = transforms.ToTensor()  # 圖片轉成張量，像素壓到 0~1
+train_data = datasets.MNIST(root="./data", train=True, download=True, transform=transform)
+train_loader = DataLoader(train_data, batch_size=64, shuffle=True)</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow</div><pre>import tensorflow as tf
+
+(x_train, y_train), _ = tf.keras.datasets.mnist.load_data()
+x_train = x_train / 255.0  # 像素值從 0~255 壓到 0~1
+
+train_dataset = (
+    tf.data.Dataset.from_tensor_slices((x_train, y_train))
+    .shuffle(10000)
+    .batch(64)
+)</pre></div>
+</div>
+
+<h2>Step 2：定義模型——還是「建立神經網路」那站教的積木</h2>
+<p>不需要任何新東西：一個 <code>Flatten</code>（把 28×28 的格子攤平成一串 784 個數字）接一層線性層、一個 ReLU、再接一層線性層輸出 10 個數字（分別代表「是 0 的分數」「是 1 的分數」⋯⋯「是 9 的分數」）。跟「建立神經網路」子地圖裡的範例是同一套寫法，只是輸入輸出的數字換成符合這個任務的大小。</p>
+<div class="framework-compare">
+<div class="fw-block"><div class="fw-label pytorch">PyTorch</div><pre>import torch.nn as nn
+
+class DigitClassifier(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.flatten = nn.Flatten()
+        self.layer1 = nn.Linear(28 * 28, 128)
+        self.relu = nn.ReLU()
+        self.layer2 = nn.Linear(128, 10)   # 10 個數字，對應 0~9
+
+    def forward(self, x):
+        x = self.flatten(x)
+        x = self.relu(self.layer1(x))
+        return self.layer2(x)
+
+model = DigitClassifier()</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow</div><pre>from tensorflow.keras import layers
+
+model = tf.keras.Sequential([
+    layers.Flatten(input_shape=(28, 28)),
+    layers.Dense(128, activation="relu"),
+    layers.Dense(10),   # 10 個數字，對應 0~9
+])</pre></div>
+</div>
+
+<h2>Step 3：訓練迴圈——「Loss 與 Optimizer」那站教的流程</h2>
+<p>分類問題用 <code>CrossEntropyLoss</code> 當 Loss（前面「訓練迴圈」子地圖提過），Optimizer 一樣用 Adam。PyTorch 手刻迴圈、TensorFlow 用 <code>model.fit()</code> 一行搞定，這個對照「訓練迴圈」子地圖已經講過一次了，這裡就是把它套用在真實資料上。</p>
+<div class="framework-compare">
+<div class="fw-block"><div class="fw-label pytorch">PyTorch（手刻）</div><pre>import torch.optim as optim
+
+loss_fn = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+for epoch in range(3):
+    for images, labels in train_loader:
+        pred = model(images)
+        loss = loss_fn(pred, labels)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+    print(f"epoch {epoch}, loss={loss.item():.4f}")</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow（一行指令）</div><pre>from tensorflow.keras import losses, optimizers
+
+model.compile(
+    optimizer=optimizers.Adam(learning_rate=0.001),
+    loss=losses.SparseCategoricalCrossentropy(from_logits=True),
+)
+
+model.fit(train_dataset, epochs=3)</pre></div>
+</div>
+
+<h2>Step 4：存檔——「模型儲存與部署」那站教的寫法</h2>
+<div class="framework-compare">
+<div class="fw-block"><div class="fw-label pytorch">PyTorch</div><pre>torch.save(model.state_dict(), "digit_classifier.pth")</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow</div><pre>model.save("digit_classifier")</pre></div>
+</div>
+
+<h2>Step 5：包成一支「輸入圖片、吐出答案」的函式</h2>
+<p>這就是整個流程的「產出」——一支別人可以直接呼叫的函式，輸入一張圖片，回傳模型判斷的數字。「模型儲存與部署」子地圖的「接上部署架構」那站，講的就是怎麼把這支函式再包一層 FastAPI，變成一個網路上的服務；這裡先專注在「函式本身能正確動作」這件事。</p>
+<div class="framework-compare">
+<div class="fw-block"><div class="fw-label pytorch">PyTorch</div><pre>def predict(image_tensor):
+    loaded = DigitClassifier()
+    loaded.load_state_dict(torch.load("digit_classifier.pth"))
+    loaded.eval()
+
+    with torch.no_grad():
+        logits = loaded(image_tensor.unsqueeze(0))   # 補一個 batch 維度
+        return logits.argmax(dim=1).item()
+
+# predict(某張手寫數字圖片) -> 例如回傳 7</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow</div><pre>def predict(image_array):
+    loaded = tf.keras.models.load_model("digit_classifier")
+    logits = loaded(image_array[None, ...])   # 補一個 batch 維度
+    return int(tf.argmax(logits, axis=1)[0])
+
+# predict(某張手寫數字圖片) -> 例如回傳 7</pre></div>
+</div>
+
+<h2>回顧一下：六塊積木是怎麼接起來的</h2>
+<table>
+<tr><th>這一步在做什麼</th><th>對應前面學過哪一站</th></tr>
+<tr><td>下載、包裝、打亂真實資料</td><td><a href="../data_pipeline/index.html">資料管線</a></td></tr>
+<tr><td>定義模型（線性層＋啟動函數）</td><td><a href="../neural_networks/index.html">建立神經網路</a></td></tr>
+<tr><td>算 Loss、算梯度、更新參數</td><td><a href="../autograd/index.html">自動微分</a>、<a href="../training_loop/index.html">訓練迴圈</a></td></tr>
+<tr><td>資料、模型、運算背後都是張量</td><td><a href="../tensors/index.html">張量基礎</a></td></tr>
+<tr><td>存成檔案、包成可呼叫的函式</td><td><a href="../model_persistence/index.html">模型儲存與部署</a></td></tr>
+</table>
+
+<h2>之後想更進一步，可以往哪裡升級</h2>
+<div class="card" style="margin-bottom:0;">
+<p style="margin-bottom:0;">這裡用的是最簡單的「線性層＋ReLU」，拿來辨識乾淨的手寫數字已經夠用，但換成更複雜的真實照片（例如辨識路上拍到的車牌、商品瑕疵）準確率會明顯不夠。幾個可以回頭查的升級方向，「進階方向路線圖」都提過：把線性層換成專門處理圖片的 <strong>卷積層（<a href="../roadmap/pages/vision_cnn.html">影像與 CNN</a>）</strong>；資料量大到跑不動時，查 <strong><a href="../roadmap/pages/distributed_training.html">分散式訓練</a></strong>；想讓訓練更快、部署更輕，查 <strong><a href="../roadmap/pages/mixed_precision_onnx.html">混合精度與 ONNX</a></strong>；如果要處理的是文字而不是圖片（例如做一個客服機器人），直接用 <strong><a href="../library_reference/index.html">常用函式庫地圖</a></strong> 裡教的 Hugging Face <code>transformers</code>，拿別人訓練好的語言模型來微調，通常比從零開始訓練快得多、也準得多。</p>
+</div>
+
+<div class="footer-links">
+<a href="../home.html">回所有主題地圖</a>
+</div>
+</div>
+</body>
+</html>

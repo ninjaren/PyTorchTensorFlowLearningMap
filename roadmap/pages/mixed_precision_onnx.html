@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>混合精度與 ONNX｜進階方向路線圖</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="container">
+<a class="back" href="../index.html">← 回進階方向地圖</a>
+<span class="tag">方向四（終點）</span>
+<h1>混合精度與 ONNX：練得更快、跑得更輕</h1>
+<p class="subtitle">這站是兩個獨立的優化方向：一個讓「訓練」更快，一個讓「訓練好的模型」更容易部署到各種地方。</p>
+
+<h2>混合精度訓練：數字不用算得那麼精細</h2>
+<div class="card">
+<p style="margin-bottom:0;">電腦裡的數字預設用「32 位元浮點數」儲存，精度很高，但佔的記憶體跟運算量也大。<strong>混合精度訓練</strong> 的想法是：訓練過程中大部分計算改用精度較低、但佔用記憶體少一半的「16 位元浮點數」，只在真正需要精確度的少數關鍵步驟（例如累加梯度時）才切回 32 位元——這就像算一間餐廳的總營收時，大部分品項抓個差不多的整數金額加總就夠準了，不需要每一筆都精算到小數點後很多位。效果是：記憶體用量大幅下降，同一張 GPU 能塞更大的批次，訓練速度通常也會提升。</p>
+</div>
+
+<h2>ONNX：讓模型變成「大家都看得懂的格式」</h2>
+<p>PyTorch 訓練出來的模型，預設只有裝了 PyTorch 的環境能跑；TensorFlow 訓練出來的模型，也只有裝了 TensorFlow 的環境能跑。<strong>ONNX（Open Neural Network Exchange）</strong> 是一種「中立」的模型格式：把任何一套框架訓練好的模型，轉換成 ONNX 格式之後，就可以在手機、瀏覽器、各種不一定裝有原始框架的環境裡執行——有點像把「只有 Word 能開的 .docx」轉存成「幾乎任何軟體都能開的 PDF」，犧牲一點點原始的靈活度，換來到處都能用的相容性。</p>
+
+<h2>之後查資料時，會遇到的關鍵字</h2>
+<table>
+<tr><th>名詞</th><th>在做什麼</th><th>對應函式庫/類別</th></tr>
+<tr><td>混合精度</td><td>大部分計算用 16 位元浮點數，省記憶體、加速訓練</td><td><code>torch.cuda.amp</code>/ TF 內建 <code>mixed_precision</code> API</td></tr>
+<tr><td>模型轉換</td><td>把訓練好的模型轉成中立的交換格式</td><td><code>torch.onnx.export</code>/<code>tf2onnx</code></td></tr>
+<tr><td>推論加速引擎</td><td>讀取 ONNX 格式、針對目標硬體優化執行速度</td><td>ONNX Runtime、TensorRT</td></tr>
+</table>
+
+<h2>路線圖看完了，接下來呢？</h2>
+<p>這張路線圖的四個方向彼此獨立，不需要照順序全部學完才能動手做專案——拿到一個實際題目（例如「做一個圖片分類器」「做一個文字摘要工具」），回頭對照這張圖找到對應的方向，再深入查資料、動手試，是比較實際的學習節奏。</p>
+
+<div class="nav-links">
+<a href="distributed_training.html">← 上一站：分散式訓練</a>
+<a href="../index.html">回進階方向地圖 →</a>
+</div>
+</div>
+</body>
+</html>

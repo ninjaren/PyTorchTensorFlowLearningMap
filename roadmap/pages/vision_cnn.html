@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>影像與 CNN｜進階方向路線圖</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="container">
+<a class="back" href="../index.html">← 回進階方向地圖</a>
+<span class="tag">方向一</span>
+<h1>影像與 CNN：讓模型「看懂」圖片</h1>
+<p class="subtitle">「建立神經網路」子地圖教的線性層，拿來處理圖片會遇到一個麻煩——這站先說清楚麻煩在哪，再預告解法的名字。</p>
+
+<h2>線性層處理圖片的麻煩：參數爆炸 + 不懂「位置關係」</h2>
+<div class="card">
+<p style="margin-bottom:0;">一張很普通的 256×256 彩色圖片，攤平成一串數字就有將近 20 萬個數字。如果直接丟進線性層，光是第一層就要學習幾千萬甚至上億個權重，而且線性層把每個像素當成「互不相關的獨立數字」，完全不理解「這個像素跟它旁邊的像素，一起組成了一個邊緣、一個形狀」這種 <strong>空間關係</strong>。這就像硬逼一個人「背下整張圖每個像素的顏色」，而不是讓他「看懂這是一張臉」——方向就錯了。</p>
+</div>
+
+<h2>解法的名字：卷積層（Convolutional Layer）</h2>
+<p><strong>CNN（卷積神經網路）</strong> 的核心零件叫 <strong>卷積層</strong>：用一個很小的「濾鏡」（例如 3×3 的小方塊）在整張圖片上滑動，每個位置都只看「這一小塊範圍」，去偵測「這裡有沒有邊緣」「這裡有沒有某種紋理」。同一個濾鏡會重複用在整張圖的每個角落（<strong>參數共享</strong>），既大幅減少需要學習的參數數量，又天生就理解「鄰近像素互相有關係」這件事。</p>
+
+<h2>之後查資料時，會遇到的關鍵字</h2>
+<table>
+<tr><th>名詞</th><th>在做什麼</th><th>對應函式庫/類別</th></tr>
+<tr><td>卷積層</td><td>用小濾鏡滑過圖片，偵測局部特徵</td><td>PyTorch <code>nn.Conv2d</code>/ TF <code>layers.Conv2D</code></td></tr>
+<tr><td>池化層</td><td>把特徵圖縮小，保留重點、丟掉細節</td><td><code>nn.MaxPool2d</code>/<code>layers.MaxPooling2D</code></td></tr>
+<tr><td>預訓練模型</td><td>別人已經用海量圖片訓練好的模型，直接拿來微調</td><td>ResNet、EfficientNet（<code>torchvision.models</code>/<code>tf.keras.applications</code>）</td></tr>
+</table>
+
+<div class="nav-links">
+<a href="../index.html">← 回進階方向地圖</a>
+<a href="sequence_transformer.html">看看方向之二：序列與 Transformer →</a>
+</div>
+</div>
+</body>
+</html>

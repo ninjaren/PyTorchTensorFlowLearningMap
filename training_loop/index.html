@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>訓練迴圈｜PyTorch / TensorFlow 學習地圖</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+ .map-wrap { max-width: 1200px; margin: 0 auto; }
+ svg { width: 100%; height: auto; display: block; }
+ .node rect { fill: var(--card-bg); stroke: var(--border); stroke-width: 2; rx: 16; transition: stroke 0.15s, stroke-width 0.15s; }
+ .node:hover rect { stroke: var(--accent); stroke-width: 4; }
+ .node text { fill: var(--text); font-family: inherit; }
+ .node .title { font-size: 20px; font-weight: 700; }
+ .node .sub { font-size: 14px; fill: var(--text-muted); }
+ .node a { cursor: pointer; }
+ .edge { stroke: var(--accent); stroke-width: 5; stroke-linecap: round; opacity: 0.55; fill: none; marker-end: url(#arrow); }
+ .legend { color: var(--text-muted); font-size: 1.1rem; margin-top: 1.8rem; }
+ .legend ol { padding-left: 1.5rem; }
+ .legend li { margin-bottom: 7px; }
+ .footer-links { margin-top: 2.8rem; padding-top: 1.4rem; border-top: 1px solid var(--border); font-size: 1.1rem; }
+</style>
+</head>
+<body>
+<div class="container map-wrap">
+<a class="back" href="../home.html">← 所有主題地圖</a>
+<h1>訓練迴圈</h1>
+<p class="subtitle">前面幾站的積木（張量、梯度、模型）到這裡全部組裝起來，變成一個真正會「練習、變準」的完整流程。</p>
+
+<svg viewBox="0 0 1200 280" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)"></path>
+</marker>
+</defs>
+<path class="edge" d="M 395,120 L 785,120" />
+
+<a xlink:href="pages/loss_optimizer.html">
+<g class="node" transform="translate(280,120)">
+<rect x="-105" y="-45" width="210" height="90"></rect>
+<text class="title" x="0" y="-8" text-anchor="middle">Loss 與 Optimizer</text>
+<text class="sub" x="0" y="22" text-anchor="middle">怎麼量「猜得多離譜」</text>
+</g>
+</a>
+
+<a xlink:href="pages/full_loop.html">
+<g class="node" transform="translate(900,120)">
+<rect x="-105" y="-45" width="210" height="90"></rect>
+<text class="title" x="0" y="-8" text-anchor="middle">完整訓練迴圈</text>
+<text class="sub" x="0" y="22" text-anchor="middle">手刻 vs 一行指令</text>
+</g>
+</a>
+</svg>
+
+<div class="legend">
+<strong>建議學習順序：</strong>
+<ol>
+<li>Loss 與 Optimizer —— 怎麼幫「模型猜得多離譜」打分數，又怎麼用這個分數調整參數</li>
+<li>完整訓練迴圈 —— 把所有步驟串起來，PyTorch 要你手刻每一步，TensorFlow 一行 <code>model.fit()</code> 搞定</li>
+</ol>
+</div>
+
+<div class="footer-links">
+<a href="../home.html">回所有主題地圖</a>
+</div>
+</div>
+</body>
+</html>

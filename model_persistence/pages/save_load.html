@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>儲存與讀取｜模型儲存與部署</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="container">
+<a class="back" href="../index.html">← 回模型儲存與部署地圖</a>
+<span class="tag">第一站</span>
+<h1>儲存與讀取：把練好的「肌肉記憶」存下來</h1>
+<p class="subtitle">訓練花了大量時間才調好的參數，如果每次都要重新訓練才能用，就太浪費了——這站講怎麼把它存成檔案，下次直接讀回來。</p>
+
+<h2>存的到底是什麼？</h2>
+<div class="card">
+<p style="margin-bottom:0;">模型訓練的過程，其實就是在不斷調整每一層「線性層」裡的那些權重跟基本值（「建立神經網路」子地圖提過的概念）。<strong>儲存模型，本質上就是把這一大堆數字存成一個檔案</strong>——下次要用的時候，先把模型的「架構」（哪些層、怎麼排列）重新建好，再把存好的那堆數字讀回去填進對應位置，模型就恢復成訓練完成時的狀態，完全不用再重新練習一次。</p>
+</div>
+
+<h2>兩套框架怎麼寫</h2>
+<div class="framework-compare">
+<div class="fw-block">
+<div class="fw-label pytorch">PyTorch</div>
+<pre># 儲存：只存參數數字（推薦做法）
+torch.save(model.state_dict(), "model.pth")
+
+# 讀取：要先建好一樣的架構，再把參數填進去
+model = MyModel()
+model.load_state_dict(torch.load("model.pth"))
+model.eval()  # 切換成「推論模式」，而不是訓練模式</pre>
+</div>
+<div class="fw-block">
+<div class="fw-label tensorflow">TensorFlow</div>
+<pre># 儲存：架構 + 參數一起存成一個資料夾
+model.save("my_model")  # SavedModel 格式
+
+# 讀取：架構跟參數一次讀回來，不用先手動建架構
+model = tf.keras.models.load_model("my_model")</pre>
+</div>
+</div>
+
+<div class="quote-box">
+ 這裡是兩套框架哲學差異的又一次體現：PyTorch 的 <code>state_dict</code> 只存「參數數字」，刻意要求你自己重新建一次模型架構再把參數填回去——這呼應了 PyTorch 一路以來「把控制權留給你」的風格；TensorFlow 的 <code>SavedModel</code> 把架構跟參數包在一起存，讀回來就是一個可以直接用的完整模型，一路呼應它「幫你把麻煩事包好」的風格。
+</div>
+
+<h2>model.eval() 是什麼，為什麼不能漏？</h2>
+<p>有些層（像之後進階主題會提到的 Dropout、BatchNorm）在「訓練時」跟「實際使用時」的行為不一樣——例如 Dropout 訓練時會隨機讓一些神經元「放假」，增加模型的穩健度，但實際使用（推論）時應該讓所有神經元都正常工作。<code>model.eval()</code> 就是明確告訴 PyTorch「現在是實際使用階段，請切換成對應的行為」。TensorFlow 透過呼叫模型時用 <code>training=False</code> 參數（或在用 <code>predict()</code> 時自動處理）達到同樣效果。</p>
+
+<h2>工作中真的會踩到的坑</h2>
+<div class="card" style="margin-bottom:0;">
+<h3>忘記呼叫 model.eval()，推論結果忽大忽小、無法重現</h3>
+<p>如果拿訓練好的 PyTorch 模型做預測，卻忘記先呼叫 <code>model.eval()</code>，模型裡的 Dropout 等層會繼續用「訓練模式」的隨機行為運作——結果就是同一筆輸入資料，每次預測出來的答案都不太一樣，而且通常比正常情況下更不準。這個坑特別陰險，因為程式完全不會報錯，只會讓預測結果看起來「怪怪的、不穩定」，很容易被誤以為是模型訓練得不夠好，而不是忘了切換模式。寫完讀取模型的程式碼後，養成立刻加一行 <code>model.eval()</code> 的習慣，可以完全避開這個坑。</p>
+</div>
+
+<div class="nav-links">
+<a href="../index.html">← 回模型儲存與部署地圖</a>
+<a href="deployment_bridge.html">下一站：接上部署架構 →</a>
+</div>
+</div>
+</body>
+</html>

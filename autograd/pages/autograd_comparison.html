@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>兩套實作對照｜自動微分</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="container">
+<a class="back" href="../index.html">← 回自動微分地圖</a>
+<span class="tag">第二站（終點）</span>
+<h1>autograd vs GradientTape：兩套寫法，同一件事</h1>
+<p class="subtitle">上一站講完「矇眼下山」的比喻，這站把它翻成真正的程式碼——順便介紹一個會在後面好幾站重複出現的重要差異。</p>
+
+<h2>兩套框架的寫法</h2>
+<div class="framework-compare">
+<div class="fw-block">
+<div class="fw-label pytorch">PyTorch</div>
+<pre>import torch
+
+x = torch.tensor(3.0, requires_grad=True)  # 告訴 PyTorch：這個要算梯度
+y = x ** 2 + 2 * x + 1  # 做一些運算
+
+y.backward()  # 喊一聲「開始算梯度！」
+print(x.grad)  # 印出結果：8.0（這就是山坡的坡度）</pre>
+</div>
+<div class="fw-block">
+<div class="fw-label tensorflow">TensorFlow</div>
+<pre>import tensorflow as tf
+
+x = tf.Variable(3.0)  # Variable 代表這是會被訓練調整的數字
+
+with tf.GradientTape() as tape:  # 打開一台「錄影機」
+    y = x ** 2 + 2 * x + 1  # 錄影機把這些運算全部錄下來
+
+grad = tape.gradient(y, x)  # 倒帶回放，算出梯度
+print(grad)  # 印出結果：8.0（跟 PyTorch 一樣）</pre>
+</div>
+</div>
+
+<p>兩邊算出來的答案一模一樣（<code>8.0</code>），因為背後的數學完全相同——差別只在「怎麼啟動這套自動計算」的介面設計：PyTorch 讓你在建立張量時就說好「這個要算梯度」（<code>requires_grad=True</code>），運算完直接喊 <code>.backward()</code>；TensorFlow 用一個叫 <code>GradientTape</code>（梯度錄影帶）的東西，像架一台攝影機，把過程中的運算全部錄下來，事後才回放去算梯度。</p>
+
+<h2>一個貫穿全程的重要差異：現學現做 vs 先寫劇本</h2>
+<div class="quote-box">
+ PyTorch 的哲學可以形容成「<strong>現學現做</strong>」：程式碼寫到哪、就真的算到哪，你可以隨時用 <code>print()</code> 看任何一個步驟的中間結果，跟平常寫 Python 的直覺完全一致。TensorFlow（尤其是舊版本）的哲學更接近「<strong>先寫好完整劇本，再一次正式開拍</strong>」：你要先把整套運算流程定義好，之後才整個一起執行——<code>GradientTape</code> 這個「錄影機」的設計，某種程度上就是這種哲學留下的痕跡：要先錄好，才能回放。這個差異會在後面幾站（尤其是訓練迴圈那站）重複出現，先有個印象就好，不用現在完全搞懂。
+</div>
+
+<h2>工作中真的會踩到的坑</h2>
+<div class="card" style="margin-bottom:0;">
+<h3>TensorFlow：忘記把運算包進 GradientTape 裡</h3>
+<p>如果某一行運算寫在 <code>with tf.GradientTape() as tape:</code> 的縮排範圍 <strong>外面</strong>，錄影機根本沒錄到這段過程，之後 <code>tape.gradient()</code> 會算不出梯度（通常會得到 <code>None</code>）。這是 TensorFlow 新手最容易犯的錯——忘記「只有在錄影機開著的時候做的運算，才會被記錄下來」，跟 PyTorch 那種「只要張量標記了 <code>requires_grad=True</code>，到處用都會自動追蹤」的直覺不太一樣，切換框架時特別容易帶著舊習慣忘記這個差異。</p>
+</div>
+
+<div class="nav-links">
+<a href="why_autograd.html">← 上一站：為什麼需要它</a>
+<a href="../index.html">回自動微分地圖 →</a>
+</div>
+</div>
+</body>
+</html>

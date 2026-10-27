@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>建立張量｜張量基礎</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="container">
+<a class="back" href="../index.html">← 回張量基礎地圖</a>
+<span class="tag">第一站</span>
+<h1>張量：裝數字的格子容器</h1>
+<p class="subtitle">深度學習裡所有的資料——一段文字、一張圖片、一首歌——最後都會被轉換成張量。搞懂張量，等於搞懂整個深度學習世界共用的「資料格式」。</p>
+
+<h2>用 Excel 試算表理解張量</h2>
+<div class="card">
+<p style="margin-bottom:0;">把張量想成「Excel 試算表的進階版」：</p>
+<ul style="margin-bottom:0;">
+<li><strong>0 維張量</strong>= 一個儲存格（就一個數字，例如 <code>5</code>）</li>
+<li><strong>1 維張量</strong>= 一整列（一排數字，例如 <code>[1, 2, 3]</code>）</li>
+<li><strong>2 維張量</strong>= 一整張工作表（像棋盤一樣的表格，有列有欄）</li>
+<li><strong>3 維張量</strong>= 好幾張工作表疊起來的活頁簿（例如一張彩色圖片，就是「高 × 寬 × 顏色」三個維度疊起來）</li>
+</ul>
+</div>
+<p>維度再往上疊也是同樣的道理，只是人腦沒辦法具體想像「四維的活頁簿」長什麼樣——但電腦完全不在乎，它只是照同一套規則繼續往上疊格子而已。</p>
+
+<h2>兩套框架怎麼建立張量</h2>
+<div class="framework-compare">
+<div class="fw-block">
+<div class="fw-label pytorch">PyTorch</div>
+<pre>import torch
+
+a = torch.tensor([1, 2, 3])
+b = torch.zeros(2, 3)  # 2列3欄，全部填0
+c = torch.rand(2, 3)  # 2列3欄，隨機填數字
+
+print(a.shape)  # torch.Size([3])
+print(b.shape)  # torch.Size([2, 3])</pre>
+</div>
+<div class="fw-block">
+<div class="fw-label tensorflow">TensorFlow</div>
+<pre>import tensorflow as tf
+
+a = tf.constant([1, 2, 3])
+b = tf.zeros([2, 3])  # 2列3欄，全部填0
+c = tf.random.uniform([2, 3])  # 2列3欄，隨機填數字
+
+print(a.shape)  # (3,)
+print(b.shape)  # (2, 3)</pre>
+</div>
+</div>
+
+<div class="quote-box">
+ 兩邊的寫法長得很像，不是巧合——這是整個業界多年來慢慢趨同的結果。你現在看到的 <code>torch.tensor()</code> 跟 <code>tf.constant()</code>，概念上做的是同一件事：把一般的 Python 清單（list）包裝成框架看得懂的張量格式。
+</div>
+
+<h2>shape：張量的「身材」</h2>
+<p><code>.shape</code> 告訴你這個張量每個維度各有多少格——這是你會最常拿來檢查、也最常出錯的地方。寫深度學習程式碼，一大半的 bug 都是「我以為這個張量長這樣，結果它的 shape 不是我想的那樣」，養成習慣每寫幾行就印出 <code>.shape</code> 看一下，比事後在一堆數字裡找問題快很多。</p>
+
+<h2>工作中真的會踩到的坑</h2>
+<div class="card" style="margin-bottom:0;">
+<h3>把「清單」跟「張量」搞混</h3>
+<p>Python 原生的清單（像 <code>[1, 2, 3]</code>）跟張量看起來很像，但張量有清單沒有的能力——例如張量可以直接做數學運算（<code>a + b</code> 會把兩個張量逐一對應的數字相加），清單的 <code>+</code> 只會把兩個清單接在一起變長，不會做數學加法。如果忘記把資料轉成張量就直接丟進模型，通常第一時間會得到一堆看不懂的錯誤訊息，而不是「資料格式不對」這種直白的提示——遇到奇怪的錯誤，先確認手上的資料是不是真的已經變成張量了。</p>
+</div>
+
+<div class="nav-links">
+<a href="../index.html">← 回張量基礎地圖</a>
+<a href="gpu_device.html">下一站：GPU／裝置 →</a>
+</div>
+</div>
+</body>
+</html>

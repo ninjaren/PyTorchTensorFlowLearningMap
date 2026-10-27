@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GPU／裝置｜張量基礎</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="container">
+<a class="back" href="../index.html">← 回張量基礎地圖</a>
+<span class="tag">第二站（終點）</span>
+<h1>GPU／裝置：容器要放在哪裡算</h1>
+<p class="subtitle">同一個張量，可以放在 CPU 的記憶體裡算，也可以放到 GPU 的記憶體裡算——這站講清楚為什麼要在意這件事，以及兩套框架怎麼切換。</p>
+
+<h2>用「在哪裡煮飯」理解裝置</h2>
+<div class="quote-box">
+ CPU 像是家裡的一個瓦斯爐——一次只能好好顧一鍋菜，但很靈活，什麼鍋具都能用。GPU 像是餐廳的大型蒸爐——一次能同時蒸幾百個小籠包，前提是食材要先排好隊、規格要統一。深度學習的運算（大量簡單的矩陣乘法）剛好就是那種「幾百份規格統一的小籠包」，所以丟給 GPU 做遠比丟給 CPU 快。
+</div>
+
+<h2>兩套框架怎麼切換裝置</h2>
+<div class="framework-compare">
+<div class="fw-block">
+<div class="fw-label pytorch">PyTorch</div>
+<pre>import torch
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+a = torch.tensor([1, 2, 3])
+a = a.to(device)  # 把張量搬到 GPU（或留在 CPU）
+
+model = MyModel()
+model = model.to(device)  # 模型也要搬過去，兩邊要在同一個地方</pre>
+</div>
+<div class="fw-block">
+<div class="fw-label tensorflow">TensorFlow</div>
+<pre>import tensorflow as tf
+
+print(tf.config.list_physical_devices('GPU'))
+# TensorFlow 預設會自動把運算丟到 GPU（如果有偵測到的話）
+# 不太需要手動 .to(device)，但想強制指定可以這樣寫：
+
+with tf.device('/GPU:0'):
+    a = tf.constant([1, 2, 3])</pre>
+</div>
+</div>
+
+<p>兩邊在這題的設計哲學不一樣：PyTorch 要你 <strong>明確</strong> 告訴它「這個東西要放哪裡」，沒寫 <code>.to(device)</code> 就會乖乖留在 CPU；TensorFlow 預設 <strong>自動</strong> 幫你判斷「有 GPU 就用 GPU」，你通常不太需要自己管。各有好處：PyTorch 的明確讓你隨時清楚東西在哪，TensorFlow 的自動讓新手少一件事要煩惱。</p>
+
+<h2>工作中真的會踩到的坑</h2>
+<div class="card" style="margin-bottom:0;">
+<h3>PyTorch：模型在 GPU，資料忘記搬過去（或相反）</h3>
+<p>這是 PyTorch 新手最常遇到的錯誤訊息之一：<code>Expected all tensors to be on the same device</code>（期待所有張量都在同一個裝置上）。意思是你的模型（<code>model</code>）跟你餵進去的資料（<code>a</code>），一個在 GPU、一個還留在 CPU——兩邊必須在 <strong>同一個地方</strong> 才能一起運算，就像蒸爐裡的食材不能有一半還放在冰箱裡。解法很直覺：確認模型跟每一批資料都呼叫過 <code>.to(device)</code>，而且用的是同一個 <code>device</code> 變數，不要一個寫死 <code>"cuda"</code>、一個寫死 <code>"cpu"</code>。</p>
+</div>
+
+<div class="nav-links">
+<a href="creating_tensors.html">← 上一站：建立張量</a>
+<a href="../index.html">回張量基礎地圖 →</a>
+</div>
+</div>
+</body>
+</html>

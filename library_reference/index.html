@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>常用函式庫地圖｜PyTorch / TensorFlow 學習地圖</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+ .container { max-width: 1360px; }
+ .mod-card h3 { margin-top: 0; }
+ .mod-card .eng { color: var(--text-muted); font-weight: 400; font-size: 0.82em; }
+ .mod-card .framework-compare { margin: 0.9rem 0 0; }
+ .mod-card .framework-compare pre { font-size: 0.85rem; padding: 12px 16px; }
+ .mod-card .fw-label { font-size: 0.82rem; padding: 6px 14px; }
+</style>
+</head>
+<body>
+<div class="container">
+<a class="back" href="../home.html">← 所有主題地圖</a>
+<h1>常用函式庫地圖</h1>
+<p class="subtitle">PyTorch 跟 TensorFlow 完整的 API 都有幾千個函式，全部列出來反而沒人記得住。這頁只收「寫深度學習程式幾乎一定會用到」的常用模組，查閱用，不用照順序讀——每一個都附上「這包是幹什麼的」一句話說明，跟一段可以直接照著跑的完整範例。</p>
+
+<h2>張量與運算核心</h2>
+
+<div class="card mod-card">
+<h3>張量物件 <span class="eng">Tensor</span></h3>
+<p style="margin-bottom:0;">整套框架最底層的「數字容器」，前面「張量基礎」子地圖教過——所有資料、所有模型參數，最終都是以張量的形式存在。下面示範建立張量、檢查形狀、基本運算。</p>
+<div class="framework-compare">
+<div class="fw-block"><div class="fw-label pytorch">PyTorch</div><pre>import torch
+
+x = torch.tensor([[1, 2, 3], [4, 5, 6]])
+print(x.shape)        # torch.Size([2, 3])
+print(x.dtype)        # torch.int64
+
+y = x.float() * 2      # 轉型成浮點數再乘以2
+print(y)
+# tensor([[ 2.,  4.,  6.],
+#         [ 8., 10., 12.]])</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow</div><pre>import tensorflow as tf
+
+x = tf.constant([[1, 2, 3], [4, 5, 6]])
+print(x.shape)         # (2, 3)
+print(x.dtype)         # &lt;dtype: 'int32'&gt;
+
+y = tf.cast(x, tf.float32) * 2
+print(y)
+# tf.Tensor(
+# [[ 2.  4.  6.]
+#  [ 8. 10. 12.]], shape=(2, 3), dtype=float32)</pre></div>
+</div>
+</div>
+
+<div class="card mod-card" style="margin-bottom:0;">
+<h3>低階數學運算 <span class="eng">torch / tf.math</span></h3>
+<p style="margin-bottom:0;">加減乘除、矩陣乘法、三角函數等基礎數學運算，直接掛在最上層的 <code>torch</code> 或 <code>tf</code>（也有獨立的 <code>tf.math</code>）底下，是所有更高層模組背後都在用的基本工具。下面示範「兩個 2×2 矩陣相乘」跟「沿著某一軸加總」。</p>
+<div class="framework-compare">
+<div class="fw-block"><div class="fw-label pytorch">PyTorch</div><pre>a = torch.tensor([[1., 2.], [3., 4.]])
+b = torch.tensor([[5., 6.], [7., 8.]])
+
+print(torch.matmul(a, b))
+# tensor([[19., 22.],
+#         [43., 50.]])
+
+print(torch.sum(a, dim=0))   # 沿著「列」加總 -> [4., 6.]
+print(torch.sum(a, dim=1))   # 沿著「欄」加總 -> [3., 7.]</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow</div><pre>a = tf.constant([[1., 2.], [3., 4.]])
+b = tf.constant([[5., 6.], [7., 8.]])
+
+print(tf.matmul(a, b))
+# [[19. 22.]
+#  [43. 50.]]
+
+print(tf.reduce_sum(a, axis=0))   # [4. 6.]
+print(tf.reduce_sum(a, axis=1))   # [3. 7.]</pre></div>
+</div>
+</div>
+
+<h2>自動微分</h2>
+
+<div class="card mod-card" style="margin-bottom:0;">
+<h3>梯度計算 <span class="eng">Autograd / GradientTape</span></h3>
+<p style="margin-bottom:0;">「自動微分」子地圖的主角——自動算出「每個參數該往哪個方向調整」。PyTorch 預設所有張量運算都會被追蹤；TensorFlow 要明確用 <code>GradientTape</code> 包住想追蹤的計算範圍（兩套框架的「現學現做 vs 先寫劇本」哲學差異，從這裡就開始了）。下面示範算出 <code>y = x²</code> 在 <code>x = 3</code> 時的梯度（正確答案應該是 <code>2x = 6</code>）。</p>
+<div class="framework-compare">
+<div class="fw-block"><div class="fw-label pytorch">PyTorch</div><pre>x = torch.tensor(3.0, requires_grad=True)
+y = x ** 2
+
+y.backward()           # 從 y 往回算梯度
+print(x.grad)           # tensor(6.)</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow</div><pre>x = tf.Variable(3.0)
+
+with tf.GradientTape() as tape:
+    y = x ** 2
+
+grad = tape.gradient(y, x)
+print(grad)             # tf.Tensor(6.0, shape=(), dtype=float32)</pre></div>
+</div>
+</div>
+
+<h2>神經網路層與模型容器</h2>
+
+<div class="card mod-card">
+<h3>常用層 <span class="eng">torch.nn / tf.keras.layers</span></h3>
+<p style="margin-bottom:0;">「建立神經網路」子地圖教過的積木盒——線性層、卷積層、啟動函數等所有「層」都放在這裡。下面示範一筆 4 個數字的輸入，經過線性層變成 8 個數字，再經過 ReLU。</p>
+<div class="framework-compare">
+<div class="fw-block"><div class="fw-label pytorch">PyTorch</div><pre>import torch.nn as nn
+
+linear = nn.Linear(in_features=4, out_features=8)
+relu = nn.ReLU()
+
+x = torch.rand(1, 4)     # 模擬一筆輸入
+y = relu(linear(x))
+print(y.shape)             # torch.Size([1, 8])</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow</div><pre>from tensorflow.keras import layers
+
+dense = layers.Dense(units=8, input_shape=(4,), activation='relu')
+
+x = tf.random.uniform((1, 4))
+y = dense(x)
+print(y.shape)              # (1, 8)</pre></div>
+</div>
+</div>
+
+<div class="card mod-card" style="margin-bottom:0;">
+<h3>模型容器 <span class="eng">nn.Module / keras.Model</span></h3>
+<p style="margin-bottom:0;">把好幾個層組裝成一個完整模型的「骨架」。PyTorch 幾乎所有模型都繼承自 <code>nn.Module</code>；TensorFlow 常用 <code>Sequential</code>（簡單依序排列）或繼承 <code>Model</code>（需要更複雜結構時）。下面示範一個「輸入4個數字、輸出1個數字」的最小模型。</p>
+<div class="framework-compare">
+<div class="fw-block"><div class="fw-label pytorch">PyTorch</div><pre>class MyModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.layer1 = nn.Linear(4, 8)
+        self.relu = nn.ReLU()
+        self.layer2 = nn.Linear(8, 1)
+
+    def forward(self, x):
+        return self.layer2(self.relu(self.layer1(x)))
+
+model = MyModel()
+x = torch.rand(1, 4)
+print(model(x).shape)    # torch.Size([1, 1])</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow</div><pre>model = tf.keras.Sequential([
+    layers.Dense(8, activation='relu', input_shape=(4,)),
+    layers.Dense(1),
+])
+
+x = tf.random.uniform((1, 4))
+print(model(x).shape)     # (1, 1)</pre></div>
+</div>
+</div>
+
+<h2>優化器與損失函數</h2>
+
+<div class="card mod-card">
+<h3>優化器 <span class="eng">torch.optim / keras.optimizers</span></h3>
+<p style="margin-bottom:0;">「訓練迴圈」子地圖教過的 SGD、Adam 等「決定怎麼調整參數」的策略。下面示範一次最小的「算梯度 → 更新參數」流程。</p>
+<div class="framework-compare">
+<div class="fw-block"><div class="fw-label pytorch">PyTorch</div><pre>import torch.optim as optim
+
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+loss_fn = nn.MSELoss()
+
+pred = model(x)
+loss = loss_fn(pred, torch.zeros_like(pred))
+
+optimizer.zero_grad()   # 先清空上次的梯度
+loss.backward()          # 算梯度
+optimizer.step()         # 更新參數</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow</div><pre>from tensorflow.keras import optimizers, losses
+
+optimizer = optimizers.Adam(learning_rate=0.001)
+loss_fn = losses.MeanSquaredError()
+
+with tf.GradientTape() as tape:
+    pred = model(x)
+    loss = loss_fn(tf.zeros_like(pred), pred)
+
+grads = tape.gradient(loss, model.trainable_variables)
+optimizer.apply_gradients(zip(grads, model.trainable_variables))</pre></div>
+</div>
+</div>
+
+<div class="card mod-card" style="margin-bottom:0;">
+<h3>損失函數 <span class="eng">(在 torch.nn 裡) / keras.losses</span></h3>
+<p style="margin-bottom:0;">「量模型猜得多離譜」的那把尺。PyTorch 的損失函數其實也放在 <code>torch.nn</code> 裡（跟「層」共用同一個模組），TensorFlow 則獨立成 <code>keras.losses</code>。下面示範兩種最常見的類型：連續數值用 MSE，分類用 CrossEntropy。</p>
+<div class="framework-compare">
+<div class="fw-block"><div class="fw-label pytorch">PyTorch</div><pre># 連續數值（例如房價）
+mse = nn.MSELoss()
+mse(torch.tensor([3.0]), torch.tensor([2.5]))  # tensor(0.25)
+
+# 分類（例如3種類別，正確答案是第1類）
+ce = nn.CrossEntropyLoss()
+logits = torch.tensor([[2.0, 0.5, 0.1]])
+ce(logits, torch.tensor([0]))</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow</div><pre># 連續數值
+mse = losses.MeanSquaredError()
+mse([3.0], [2.5])  # 0.25
+
+# 分類
+ce = losses.SparseCategoricalCrossentropy(from_logits=True)
+logits = tf.constant([[2.0, 0.5, 0.1]])
+ce([0], logits)</pre></div>
+</div>
+</div>
+
+<h2>資料處理</h2>
+
+<div class="card mod-card" style="margin-bottom:0;">
+<h3>資料管線 <span class="eng">torch.utils.data / tf.data</span></h3>
+<p style="margin-bottom:0;">「資料管線」子地圖教過的「怎麼把資料包裝、分批、打散」。下面示範把一組 x、y 包成每批 2 筆、順序打散的資料流。</p>
+<div class="framework-compare">
+<div class="fw-block"><div class="fw-label pytorch">PyTorch</div><pre>from torch.utils.data import TensorDataset, DataLoader
+
+x = torch.rand(10, 4)
+y = torch.rand(10, 1)
+
+dataset = TensorDataset(x, y)
+loader = DataLoader(dataset, batch_size=2, shuffle=True)
+
+for x_batch, y_batch in loader:
+    print(x_batch.shape, y_batch.shape)  # [2,4] [2,1]</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow</div><pre>x = tf.random.uniform((10, 4))
+y = tf.random.uniform((10, 1))
+
+dataset = (
+    tf.data.Dataset.from_tensor_slices((x, y))
+    .shuffle(buffer_size=10)
+    .batch(2)
+)
+
+for x_batch, y_batch in dataset:
+    print(x_batch.shape, y_batch.shape)  # (2,4) (2,1)</pre></div>
+</div>
+</div>
+
+<h2>裝置管理（GPU）</h2>
+
+<div class="card mod-card" style="margin-bottom:0;">
+<h3>搬到 GPU 上運算 <span class="eng">torch.cuda / tf 自動分配</span></h3>
+<p style="margin-bottom:0;">「張量基礎」子地圖提過：PyTorch 要你手動把資料跟模型搬到指定裝置（<code>.to(device)</code>）；TensorFlow 預設會自動偵測、自動把運算搬到可用的 GPU 上。下面示範怎麼寫一段「不管有沒有 GPU 都能正常跑」的程式碼。</p>
+<div class="framework-compare">
+<div class="fw-block"><div class="fw-label pytorch">PyTorch</div><pre>device = "cuda" if torch.cuda.is_available() else "cpu"
+print(f"using {device}")
+
+model.to(device)
+x = x.to(device)       # 資料也要手動搬到同一個裝置
+y = model(x)</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow</div><pre>print("GPUs:", tf.config.list_physical_devices('GPU'))
+
+# 通常不用手動搬，TensorFlow自動選可用的裝置
+y = model(x)
+
+# 需要時才手動指定：
+with tf.device("/GPU:0"):
+    y = model(x)</pre></div>
+</div>
+</div>
+
+<h2>模型儲存與載入</h2>
+
+<div class="card mod-card" style="margin-bottom:0;">
+<h3>存檔與讀檔 <span class="eng">torch.save / model.save</span></h3>
+<p style="margin-bottom:0;">「模型儲存與部署」子地圖教過的內容——PyTorch 習慣只存參數數字（<code>state_dict</code>），TensorFlow 習慣把架構跟參數一起存成一個資料夾（<code>SavedModel</code>）。下面示範「存檔」跟「讀回來繼續用」的完整流程。</p>
+<div class="framework-compare">
+<div class="fw-block"><div class="fw-label pytorch">PyTorch</div><pre># 存檔
+torch.save(model.state_dict(), "model.pth")
+
+# 讀檔：要先建好一樣的架構
+loaded = MyModel()
+loaded.load_state_dict(torch.load("model.pth"))
+loaded.eval()  # 切換成推論模式</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow</div><pre># 存檔：架構+參數一起存
+model.save("my_model")
+
+# 讀檔：不用先手動建架構
+loaded = tf.keras.models.load_model("my_model")</pre></div>
+</div>
+</div>
+
+<h2>生態系與預訓練模型</h2>
+
+<div class="card mod-card">
+<h3>電腦視覺工具箱 <span class="eng">torchvision / keras.applications</span></h3>
+<p style="margin-bottom:0;">「進階方向路線圖」提過的 CNN 相關內容——內建常見的圖片資料集、圖片前處理工具，以及別人已經訓練好、可以直接拿來微調的經典模型（例如 ResNet）。下面示範載入一個已經訓練好的模型，直接拿來對一張圖做預測。</p>
+<div class="framework-compare">
+<div class="fw-block"><div class="fw-label pytorch">PyTorch</div><pre>from torchvision import models, transforms
+from PIL import Image
+
+model = models.resnet18(weights="IMAGENET1K_V1")
+model.eval()
+
+preprocess = transforms.Compose([
+    transforms.Resize(256), transforms.CenterCrop(224),
+    transforms.ToTensor(),
+])
+img = preprocess(Image.open("cat.jpg")).unsqueeze(0)
+
+with torch.no_grad():
+    pred = model(img)            # 1000種類別的分數</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow</div><pre>from tensorflow.keras.applications import resnet50
+import numpy as np
+from PIL import Image
+
+model = resnet50.ResNet50(weights='imagenet')
+
+img = Image.open("cat.jpg").resize((224, 224))
+x = resnet50.preprocess_input(
+    np.expand_dims(np.array(img), axis=0)
+)
+pred = model.predict(x)          # 1000種類別的分數</pre></div>
+</div>
+</div>
+
+<div class="card mod-card" style="margin-bottom:0;">
+<h3>預訓練語言模型 <span class="eng">Hugging Face transformers</span></h3>
+<p>「進階方向路線圖」提過的 Transformer 相關內容——這套函式庫不屬於 PyTorch 或 TensorFlow 任何一方，是第三方套件，特別之處是 <strong>同時支援兩套框架</strong>，讓你用幾乎一樣的程式碼載入同一個預訓練語言模型。幾個常碰到的名詞：<strong>Model Hub</strong>（<code>huggingface.co/models</code>，別人已經訓練好、可以直接下載來用的模型倉庫，上面放了幾十萬個模型）、<strong>Tokenizer</strong>（把文字切成模型看得懂的數字 ID，是跟模型配對好的，不能混用不同模型的 tokenizer）、<strong>pipeline()</strong>（最快的高階入口，把「tokenizer → 模型 → 輸出轉回人看得懂的格式」整套包好）。</p>
+
+<p style="margin-bottom:0;"><strong>最快的入口：<code>pipeline()</code></strong>——不用自己管 tokenizer、不用自己解讀模型輸出，幾行就能跑完整個流程，兩套框架寫法完全一樣（底層實際用哪個框架，<code>transformers</code> 會自動幫你決定）：</p>
+<pre>from transformers import pipeline
+
+classifier = pipeline("sentiment-analysis")  # 第一次執行會自動下載一個預設模型
+result = classifier("I love this movie!")
+print(result)  # [{'label': 'POSITIVE', 'score': 0.999...}]</pre>
+
+<p>需要自己控制中間細節時（例如要拿 token 的向量去接別的模型、要自己微調模型），才需要往下一層，自己呼叫 <code>AutoTokenizer</code> 和 <code>AutoModel</code>——下面示範把一句話轉成 token、餵進模型拿到輸出。</p>
+<div class="framework-compare">
+<div class="fw-block"><div class="fw-label pytorch">PyTorch 後端</div><pre>from transformers import AutoTokenizer, AutoModel
+
+name = "bert-base-uncased"
+tokenizer = AutoTokenizer.from_pretrained(name)
+model = AutoModel.from_pretrained(name)
+
+inputs = tokenizer("Hello world", return_tensors="pt")
+outputs = model(**inputs)
+print(outputs.last_hidden_state.shape)</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow 後端</div><pre>from transformers import AutoTokenizer, TFAutoModel
+
+name = "bert-base-uncased"
+tokenizer = AutoTokenizer.from_pretrained(name)
+model = TFAutoModel.from_pretrained(name)
+
+inputs = tokenizer("Hello world", return_tensors="tf")
+outputs = model(**inputs)
+print(outputs.last_hidden_state.shape)</pre></div>
+</div>
+</div>
+
+<h2>部署與推論加速</h2>
+
+<div class="card mod-card" style="margin-bottom:0;">
+<h3>模型格式轉換 <span class="eng">torch.onnx / tf.saved_model</span></h3>
+<p style="margin-bottom:0;">「進階方向路線圖」提過的 ONNX 相關內容——把訓練好的模型轉成能在各種環境執行的中立格式，是上線部署前常見的最後一步。下面示範把前面定義的 <code>model</code> 轉出去。</p>
+<div class="framework-compare">
+<div class="fw-block"><div class="fw-label pytorch">PyTorch</div><pre>sample_input = torch.rand(1, 4)   # 跟真實輸入形狀一樣的範例
+
+torch.onnx.export(
+    model, sample_input, "model.onnx",
+    input_names=["input"], output_names=["output"],
+)</pre></div>
+<div class="fw-block"><div class="fw-label tensorflow">TensorFlow</div><pre># 先存成 SavedModel
+tf.saved_model.save(model, "export_dir")
+
+# 再用 tf2onnx（獨立安裝的工具）轉成 .onnx：
+# python -m tf2onnx.convert --saved-model export_dir --output model.onnx</pre></div>
+</div>
+</div>
+
+<div class="footer-links">
+<a href="../home.html">回所有主題地圖</a>
+</div>
+</div>
+</body>
+</html>

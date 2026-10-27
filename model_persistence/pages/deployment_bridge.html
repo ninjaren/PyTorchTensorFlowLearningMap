@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>接上部署架構｜模型儲存與部署</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="container">
+<a class="back" href="../index.html">← 回模型儲存與部署地圖</a>
+<span class="tag">第二站（終點）</span>
+<h1>接上部署架構：存好的模型怎麼變成一個服務</h1>
+<p class="subtitle">存成檔案只是第一步，這站講「檔案」跟「真正能被呼叫使用的服務」之間，還差了哪些東西。</p>
+
+<h2>模型檔案本身，不等於一個服務</h2>
+<div class="card">
+<p style="margin-bottom:0;"><code>model.pth</code> 或 <code>SavedModel</code> 資料夾，只是一堆存在硬碟上的數字——它自己不會「跑起來」、不會「接受外部請求」。要讓它變成一個別人可以呼叫的服務，中間至少還需要：①一個會 <strong>把模型讀進記憶體</strong> 的程式 ②一個 <strong>接收外部請求、把輸入轉成模型要的格式、呼叫模型、把結果轉回外部能看懂的格式</strong> 的介面（通常是一個 API）③讓這個服務 <strong>一直開著、能同時應付多個請求</strong> 的運行環境。</p>
+</div>
+
+<h2>最常見的接法：包成一個 API</h2>
+<div class="framework-compare">
+<div class="fw-block">
+<div class="fw-label pytorch">PyTorch</div>
+<pre># 用 FastAPI 包一個最小的推論服務
+from fastapi import FastAPI
+import torch
+
+app = FastAPI()
+model = MyModel()
+model.load_state_dict(torch.load("model.pth"))
+model.eval()
+
+@app.post("/predict")
+def predict(data: list[float]):
+    x = torch.tensor([data])
+    with torch.no_grad():       # 推論不需要算梯度，省資源
+        y = model(x)
+    return {"result": y.tolist()}</pre>
+</div>
+<div class="fw-block">
+<div class="fw-label tensorflow">TensorFlow</div>
+<pre># 一樣可以用 FastAPI，或用官方的 TensorFlow Serving
+# 這裡示範最簡單的 FastAPI 寫法
+from fastapi import FastAPI
+import tensorflow as tf
+
+app = FastAPI()
+model = tf.keras.models.load_model("my_model")
+
+@app.post("/predict")
+def predict(data: list[float]):
+    x = tf.constant([data])
+    y = model(x, training=False)
+    return {"result": y.numpy().tolist()}</pre>
+</div>
+</div>
+
+<div class="quote-box">
+ 眼熟嗎？<code>FastAPI</code> 就是「FastAPI 學習地圖」整套教學的主角——這代表「深度學習模型」跟「後端 API 開發」這兩個看起來很不同的技能，到了部署這一步會 <strong>自然接在一起</strong>：模型負責「算出答案」，FastAPI 負責「讓外部世界能夠呼叫這個答案」。<code>with torch.no_grad()</code>（或 TensorFlow 的 <code>training=False</code>）也值得注意：推論階段不需要計算梯度，關掉它可以省下不少運算資源跟記憶體，是上線時常見的效能優化習慣。
+</div>
+
+<h2>往下還有哪些要考慮的事</h2>
+<p>一個真正上線的服務，通常還要處理：同時有很多人呼叫時怎麼辦（<strong>併發</strong>）、模型檔案太大要跑在什麼等級的硬體上（CPU 夠不夠、需不需要 GPU）、流量大起大落時怎麼自動增減運算資源（<strong>擴展</strong>）。這些問題其實不只屬於深度學習模型——AI Agent 學習地圖裡「部署架構分級」這一頁，討論的正是「個人電腦」「中小企業」等不同規模下，整套服務（包含但不限於深度學習模型）該怎麼規劃基礎架構跟預算，是同一套思路的延伸應用。</p>
+
+<h2>工作中真的會踩到的坑</h2>
+<div class="card" style="margin-bottom:0;">
+<h3>忘記關掉梯度計算，推論速度被白白拖慢</h3>
+<p>推論（實際使用模型做預測）階段不需要訓練迴圈裡的「算梯度、更新參數」這一整套機制，但如果忘記用 <code>torch.no_grad()</code>（或等效設定）包住推論程式碼，PyTorch 預設還是會在背景記錄所有計算過程以備之後算梯度用——這些記錄完全沒用在推論上，卻會白白佔用額外的記憶體跟運算時間。在一個會被頻繁呼叫的服務裡，這種「看不出來哪裡錯，但速度莫名變慢、記憶體莫名變高」的問題特別容易被忽略，而原因往往就是漏了這一行。</p>
+</div>
+
+<div class="nav-links">
+<a href="save_load.html">← 上一站：儲存與讀取</a>
+<a href="../index.html">回模型儲存與部署地圖 →</a>
+</div>
+</div>
+</body>
+</html>

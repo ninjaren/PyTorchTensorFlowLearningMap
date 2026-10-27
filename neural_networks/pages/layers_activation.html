@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>層與啟動函數｜建立神經網路</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="container">
+<a class="back" href="../index.html">← 回建立神經網路地圖</a>
+<span class="tag">第一站</span>
+<h1>層與啟動函數：最基本的積木</h1>
+<p class="subtitle">神經網路裡最常見的那塊積木，叫「線性層」（或「全連接層」）——這站先搞懂它在做什麼，再講為什麼光有它還不夠。</p>
+
+<h2>線性層：其實就是「加權平均再加一點」</h2>
+<div class="card">
+<p style="margin-bottom:0;">想像你要幫一間餐廳的菜打分數，你會參考好幾個因素：味道、價格、服務、環境——每個因素你心裡都有一個「重視程度」（權重），把每個分數乘上你重視的程度，全部加起來，再加一點你自己的基本喜好值，就是你給這間餐廳的總評分。<strong>這整個「乘上權重、加總、再加一個基本值」的過程，就是線性層（Linear Layer）在做的事</strong>——只是神經網路裡，這些「權重」跟「基本值」不是你自己設的，是訓練過程中自動調整出來的。</p>
+</div>
+
+<h2>為什麼只有線性層不夠：啟動函數登場</h2>
+<p>如果一個神經網路 <strong>只</strong> 由線性層疊起來，不管疊幾層，數學上最後都能被簡化成「一個線性層」——疊再多層也沒有變得更聰明，白疊了。<strong>啟動函數（Activation Function）</strong> 的工作，就是在每個線性層後面加一點「非線性的轉折」，讓整個網路有能力學會更複雜、更彎彎曲曲的規律，而不是只能畫一條直線。最常見的啟動函數叫 <strong>ReLU</strong>：規則簡單到不可思議——「負數全部變成 0，正數維持原樣」，就這樣一個簡單規則，卻是現代神經網路最常用的啟動函數。</p>
+
+<h2>兩套框架怎麼寫</h2>
+<div class="framework-compare">
+<div class="fw-block">
+<div class="fw-label pytorch">PyTorch</div>
+<pre>import torch.nn as nn
+
+linear = nn.Linear(in_features=4, out_features=8)
+# 輸入4個數字，輸出8個數字，中間的權重、基本值自動產生
+
+relu = nn.ReLU()  # 啟動函數
+
+x = torch.rand(1, 4)  # 模擬一筆輸入資料
+y = linear(x)  # 經過線性層
+y = relu(y)  # 再經過啟動函數</pre>
+</div>
+<div class="fw-block">
+<div class="fw-label tensorflow">TensorFlow</div>
+<pre>import tensorflow as tf
+from tensorflow.keras import layers
+
+dense = layers.Dense(units=8, input_shape=(4,), activation='relu')
+# TensorFlow 很貼心：線性層(Dense)跟啟動函數
+# 可以直接合在同一行寫完，不用分開兩步
+
+x = tf.random.uniform((1, 4))
+y = dense(x)</pre>
+</div>
+</div>
+
+<div class="quote-box">
+ 注意這裡的小差異：PyTorch 習慣把「線性層」跟「啟動函數」拆成兩個獨立的物件分開寫；TensorFlow 的 <code>Dense</code> 層讓你直接在同一行用 <code>activation='relu'</code> 參數合併寫完。兩種做法最後效果一樣，只是 TensorFlow 這裡的寫法比較精簡，PyTorch 的寫法比較容易單獨替換或檢查中間某一步。
+</div>
+
+<h2>工作中真的會踩到的坑</h2>
+<div class="card" style="margin-bottom:0;">
+<h3>in_features／input_shape 跟實際資料對不上</h3>
+<p>線性層需要事先知道「輸入會有幾個數字」（PyTorch 的 <code>in_features</code>，TensorFlow 的 <code>input_shape</code>）——如果這個數字跟你實際餵進去的資料形狀不一致，會直接噴出一個關於「維度不合」的錯誤。這是神經網路最常見、但也最容易排查的錯誤類型：看到跟「shape」「dimension」有關的錯誤訊息，先回頭檢查每一層宣告的輸入/輸出數字，跟你資料實際的 <code>.shape</code> 對不對得起來。</p>
+</div>
+
+<div class="nav-links">
+<a href="../index.html">← 回建立神經網路地圖</a>
+<a href="model_definition.html">下一站：定義一個模型 →</a>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>為什麼需要自動微分｜自動微分</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="container">
+<a class="back" href="../index.html">← 回自動微分地圖</a>
+<span class="tag">第一站</span>
+<h1>矇著眼睛下山：梯度是什麼</h1>
+<p class="subtitle">「梯度」「微分」這些詞聽起來很數學，但背後的概念意外地直覺——這站完全不寫程式碼，先把概念裝進腦袋裡。</p>
+
+<h2>想像你矇著眼睛站在山坡上，要走到山谷最低點</h2>
+<div class="card">
+<p>你看不到全局地圖，只能做一件事：<strong>用腳感覺「現在這個位置往哪個方向是下坡、往哪個方向是上坡，下坡的幅度有多陡」</strong>，然後朝著「最陡的下坡方向」小小地走一步。走完這一步，重新感覺一次腳下的坡度，再走下一步。一直重複，最後你會越走越接近山谷的最低點。</p>
+<p style="margin-bottom:0;">這個「腳下感覺到的坡度」，就是 <strong>梯度（Gradient）</strong>。模型訓練的過程，做的就是同一件事——只是「山坡」換成了「模型現在有多不準」，「位置」換成了「模型內部的參數」，「走一步」換成了「調整一點點參數」。</p>
+</div>
+
+<h2>把比喻接回真正的詞彙</h2>
+<table>
+<tr><th>爬山比喻</th><th>深度學習的詞彙</th></tr>
+<tr><td>你現在站的位置（山坡上的座標）</td><td>模型目前的參數（模型內部那些會被調整的數字）</td></tr>
+<tr><td>這個位置的「海拔高度」</td><td>損失（Loss）：模型現在猜得有多離譜，數字越大代表猜得越爛</td></tr>
+<tr><td>腳下感覺到的坡度方向跟陡度</td><td>梯度（Gradient）：如果調整參數，Loss 會往哪個方向變化、變化多快</td></tr>
+<tr><td>朝下坡方向走一小步</td><td>用梯度稍微調整參數，讓 Loss 變小一點點</td></tr>
+<tr><td>重複很多次，直到走到谷底附近</td><td>訓練迴圈：一輪一輪重複調整，直到 Loss 小到你滿意</td></tr>
+</table>
+
+<h2>那「自動微分」到底在自動什麼</h2>
+<p>如果每次調整參數，都要你自己動手算「現在這個方向的坡度是多少」，那會是一場數學災難——真正的模型裡參數動輒幾百萬、幾十億個，每一個都要算一次坡度。<strong>自動微分（Autodiff）</strong> 做的事，就是框架自動幫你把這些坡度全部算出來，你完全不用自己動手推導任何數學式——這也是為什麼 PyTorch 跟 TensorFlow 都把這個功能做成框架最核心的機制之一，沒有它，深度學習幾乎不可能普及到這麼多人能上手。</p>
+
+<div class="quote-box">
+ 一句話總結：<strong>自動微分 = 框架自動幫你算出「現在該往哪個方向、調整多少參數，模型才會變得準一點」。</strong> 下一站會看兩套框架各自怎麼讓你「啟動」這個自動計算的機制。
+</div>
+
+<div class="nav-links">
+<a href="../index.html">← 回自動微分地圖</a>
+<a href="autograd_comparison.html">下一站：兩套實作對照 →</a>
+</div>
+</div>
+</body>
+</html>

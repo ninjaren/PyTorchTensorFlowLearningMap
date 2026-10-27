@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>批次與打散｜資料管線</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="container">
+<a class="back" href="../index.html">← 回資料管線地圖</a>
+<span class="tag">第二站（終點）</span>
+<h1>批次與打散：batch_size 跟 shuffle 在幹嘛</h1>
+<p class="subtitle">上一站看到 DataLoader／tf.data 裡的 batch_size 和 shuffle 參數，這站講清楚它們到底在解決什麼問題。</p>
+
+<h2>為什麼要「分批」，不一次把全部資料餵進去？</h2>
+<p>想像資料集有 10 萬筆——如果一次把 10 萬筆全部塞進模型一起算梯度，記憶體（尤其 GPU 記憶體）很可能直接爆掉，而且因為每一步都要等全部 10 萬筆算完才能更新一次參數，練習的節奏會非常慢。<strong>批次（batch）</strong> 就是把資料切成一小份一小份（例如每份 32 筆），每看完一小份就更新一次參數——這樣記憶體夠用，而且參數更新得更頻繁，練習節奏快很多。<code>batch_size=32</code> 就是在設定「每一小份裝幾筆」。</p>
+
+<h2>為什麼要「打散」順序？</h2>
+<p>如果資料本身是按照某種順序排好的（例如所有「貓」的圖片排在前面、所有「狗」的圖片排在後面），模型在練習過程中會先把「貓」學得很熟，再突然切換去學「狗」，這樣學出來的效果通常比較差，甚至可能學偏掉。<strong>打散（shuffle）</strong> 就是每一輪練習開始前，先把資料順序隨機打亂，讓模型每一批看到的資料都是「各種類別混在一起」，學習效果更穩定、更接近真實使用情境。</p>
+
+<h2>兩套框架怎麼寫</h2>
+<div class="framework-compare">
+<div class="fw-block">
+<div class="fw-label pytorch">PyTorch</div>
+<pre>loader = DataLoader(
+    dataset,
+    batch_size=32,   # 每批32筆
+    shuffle=True,    # 每輪開始前打散順序
+)
+
+for x_batch, y_batch in loader:
+    ...   # 自動依序吐出一批一批的資料</pre>
+</div>
+<div class="fw-block">
+<div class="fw-label tensorflow">TensorFlow</div>
+<pre>dataset = (
+    tf.data.Dataset.from_tensor_slices((x, y))
+    .shuffle(buffer_size=1000)   # 打散(buffer越大越接近真隨機)
+    .batch(32)   # 每批32筆
+)
+
+for x_batch, y_batch in dataset:
+    ...</pre>
+</div>
+</div>
+
+<div class="quote-box">
+ 注意 TensorFlow 的 <code>.shuffle()</code> 多了一個 <code>buffer_size</code>：因為資料量可能很大，不會把全部資料一次讀進記憶體再打散，而是先讀一小段「緩衝區」進來打散，<code>buffer_size</code> 越大，打散的隨機程度越接近真正的全域隨機，但也要佔用更多記憶體——這是一個「隨機程度」跟「記憶體用量」的取捨。
+</div>
+
+<h2>工作中真的會踩到的坑</h2>
+<div class="card" style="margin-bottom:0;">
+<h3>驗證集／測試集也 shuffle，或忘記關掉 shuffle</h3>
+<p>訓練用的資料要打散沒問題，但 <strong>驗證集（validation set）跟測試集（test set）通常不需要、也不應該打散</strong>——因為評估模型表現時，我們只需要「跑過所有資料算一次整體表現」，打散順序對結果沒有任何幫助，反而會讓「這次驗證結果能不能跟上次比較」變得不好追蹤（尤其在你想要印出某幾筆預測結果來人工檢查、對照原始資料時，順序被打散會讓對照變得很麻煩）。常見的設定習慣是：訓練用的 <code>DataLoader</code>／<code>Dataset</code> 設 <code>shuffle=True</code>，驗證跟測試用的設 <code>shuffle=False</code>（PyTorch 的 <code>DataLoader</code> 預設就是 <code>False</code>，容易忘記的反而是訓練那邊要記得手動打開）。</p>
+</div>
+
+<div class="nav-links">
+<a href="dataset_basics.html">← 上一站：Dataset 與 DataLoader</a>
+<a href="../index.html">回資料管線地圖 →</a>
+</div>
+</div>
+</body>
+</html>

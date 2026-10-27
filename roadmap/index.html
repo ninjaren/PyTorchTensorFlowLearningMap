@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>進階方向路線圖｜PyTorch / TensorFlow 學習地圖</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+ .map-wrap { max-width: 1000px; margin: 0 auto; }
+ svg { width: 100%; height: auto; display: block; }
+ .node rect { fill: var(--card-bg); stroke: var(--border); stroke-width: 2; rx: 16; transition: stroke 0.15s, stroke-width 0.15s; }
+ .node:hover rect { stroke: var(--accent); stroke-width: 4; }
+ .node text { fill: var(--text); font-family: inherit; }
+ .node .title { font-size: 19px; font-weight: 700; }
+ .node .sub { font-size: 13px; fill: var(--text-muted); }
+ .node a { cursor: pointer; }
+ .legend { color: var(--text-muted); font-size: 1.1rem; margin-top: 1.8rem; }
+ .legend ol { padding-left: 1.5rem; }
+ .legend li { margin-bottom: 7px; }
+ .footer-links { margin-top: 2.8rem; padding-top: 1.4rem; border-top: 1px solid var(--border); font-size: 1.1rem; }
+</style>
+</head>
+<body>
+<div class="container map-wrap">
+<a class="back" href="../home.html">← 所有主題地圖</a>
+<h1>進階方向路線圖</h1>
+<p class="subtitle">前面六張地圖是「現在就能看懂、能動手寫」的基礎；這張地圖不一樣——是「先知道方向跟名稱,之後真正要用到時再深入」的路線圖，幫你之後查資料時知道該找什麼關鍵字。</p>
+
+<svg viewBox="0 0 900 450" xmlns="http://www.w3.org/2000/svg">
+<a xlink:href="pages/vision_cnn.html">
+<g class="node" transform="translate(200,120)">
+<rect x="-105" y="-45" width="210" height="90"></rect>
+<text class="title" x="0" y="-8" text-anchor="middle">影像與 CNN</text>
+<text class="sub" x="0" y="22" text-anchor="middle">讓模型「看懂」圖片</text>
+</g>
+</a>
+
+<a xlink:href="pages/sequence_transformer.html">
+<g class="node" transform="translate(700,120)">
+<rect x="-105" y="-45" width="210" height="90"></rect>
+<text class="title" x="0" y="-8" text-anchor="middle">序列與 Transformer</text>
+<text class="sub" x="0" y="22" text-anchor="middle">讓模型「看懂」順序與語言</text>
+</g>
+</a>
+
+<a xlink:href="pages/distributed_training.html">
+<g class="node" transform="translate(700,350)">
+<rect x="-105" y="-45" width="210" height="90"></rect>
+<text class="title" x="0" y="-8" text-anchor="middle">分散式訓練</text>
+<text class="sub" x="0" y="22" text-anchor="middle">一張 GPU 不夠用時</text>
+</g>
+</a>
+
+<a xlink:href="pages/mixed_precision_onnx.html">
+<g class="node" transform="translate(200,350)">
+<rect x="-105" y="-45" width="210" height="90"></rect>
+<text class="title" x="0" y="-8" text-anchor="middle">混合精度與 ONNX</text>
+<text class="sub" x="0" y="22" text-anchor="middle">讓訓練更快、部署更輕</text>
+</g>
+</a>
+</svg>
+
+<div class="legend">
+<strong>怎麼看這張圖：</strong>
+<ol>
+<li>影像與 CNN —— 前面教的「線性層」怎麼進化成專門處理圖片的「卷積層」</li>
+<li>序列與 Transformer —— 怎麼處理「有順序關係」的資料，例如一句話、一段時間序列</li>
+<li>分散式訓練 —— 模型或資料太大，一張 GPU 練不動時怎麼辦</li>
+<li>混合精度與 ONNX —— 怎麼讓訓練更快、怎麼讓練好的模型在各種裝置上都能跑</li>
+</ol>
+<p>這四個方向彼此獨立，不是先後順序（所以下面沒有畫連接線），依你接下來實際想做的專案挑一個深入。</p>
+</div>
+
+<div class="footer-links">
+<a href="../home.html">回所有主題地圖</a>
+</div>
+</div>
+</body>
+</html>

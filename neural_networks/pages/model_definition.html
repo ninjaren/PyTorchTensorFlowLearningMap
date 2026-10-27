@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>定義一個模型｜建立神經網路</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="container">
+<a class="back" href="../index.html">← 回建立神經網路地圖</a>
+<span class="tag">第二站（終點）</span>
+<h1>定義一個模型：把積木疊起來</h1>
+<p class="subtitle">上一站學會了單一塊積木怎麼做，這站把好幾塊積木組裝成一個完整的模型——兩套框架在這裡的寫法差異是整個教學網站裡最明顯的一次。</p>
+
+<h2>兩套框架怎麼寫</h2>
+<div class="framework-compare">
+<div class="fw-block">
+<div class="fw-label pytorch">PyTorch</div>
+<pre>import torch.nn as nn
+
+class MyModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.layer1 = nn.Linear(4, 8)
+        self.relu = nn.ReLU()
+        self.layer2 = nn.Linear(8, 1)
+
+    def forward(self, x):
+        x = self.layer1(x)
+        x = self.relu(x)
+        x = self.layer2(x)
+        return x
+
+model = MyModel()</pre>
+</div>
+<div class="fw-block">
+<div class="fw-label tensorflow">TensorFlow</div>
+<pre>from tensorflow.keras import Sequential, layers
+
+model = Sequential([
+    layers.Dense(8, activation='relu', input_shape=(4,)),
+    layers.Dense(1),
+])
+
+# 這就是完整的模型，不用再寫任何東西</pre>
+</div>
+</div>
+
+<h2>為什麼 PyTorch 要寫一個 class，TensorFlow 不用</h2>
+<p>這組差異，直接呼應「自動微分」子地圖提過的「現學現做 vs 先寫劇本」哲學：</p>
+<ul>
+<li><strong>PyTorch</strong> 要你寫一個 <code>class</code>，裡面的 <code>forward()</code> 方法明確寫出「資料進來之後，要依序流過哪些層」——這給你完全的自由，<code>forward()</code> 裡面甚至可以寫 <code>if</code> 判斷式，讓資料根據情況走不同的路徑</li>
+<li><strong>TensorFlow</strong> 的 <code>Sequential</code>，顧名思義就是「依序排列」——你只要把每一層按順序放進一個清單，框架自動幫你把它們串起來，簡單到幾乎不用動腦，但代價是只能「依序往下流」，沒辦法在中間插入複雜的條件判斷</li>
+</ul>
+<p>這不是誰比較好、誰比較差，是取捨：簡單直來直往的模型，<code>Sequential</code> 又快又好寫；結構複雜、需要分支或跳接的模型，PyTorch 的寫法（或 TensorFlow 自己也有的 <strong>Functional API</strong>，一種更有彈性但沒 <code>Sequential</code> 這麼直覺的寫法）會更合適。</p>
+
+<h2>一個小提醒：super().__init__() 不能漏</h2>
+<p>PyTorch 的 <code>MyModel</code> 裡第一行一定要寫 <code>super().__init__()</code>——這是在跟 Python 說「先讓我繼承來的父類別（<code>nn.Module</code>）把它自己份內該做的準備工作做完，我才能接著做我自己的設定」。忘記寫這行，程式通常會在你完全想不到的地方（例如呼叫 <code>model.to(device)</code> 時）噴出奇怪的錯誤，而不是在漏寫的那一行當場報錯。</p>
+
+<h2>工作中真的會踩到的坑</h2>
+<div class="card" style="margin-bottom:0;">
+<h3>以為 Sequential 可以處理任何模型結構</h3>
+<p>新手很容易因為 <code>Sequential</code> 太好寫，想把所有模型都硬塞進這個格式——一旦你的模型需要「把兩條不同的資料路徑在中間合併」或「跳過幾層直接接到後面」（這類結構在稍微進階一點的模型裡很常見），<code>Sequential</code> 就做不到了，因為它的假設就是「資料只會乖乖依序往下流，一條路走到底」。遇到這種情況不用糾結，直接換用 TensorFlow 的 Functional API 或 PyTorch 的 <code>class</code> 寫法，不要硬凹 <code>Sequential</code>。</p>
+</div>
+
+<div class="deep-dive">
+<span class="deep-dive-badge">深入機制（進階，可選讀）</span>
+<p class="subtitle">PyTorch 要求你寫一個繼承自 <code>nn.Module</code> 的 class，這背後其實是一個軟體工程裡常見的設計模式——理解這個模式，能幫你看懂為什麼框架要這樣設計。</p>
+
+<h2>1. 這是「模板方法模式」的應用</h2>
+<p><code>nn.Module</code> 幫你把「怎麼管理模型的參數」「怎麼搬到 GPU」「怎麼存檔讀檔」這些共通的麻煩事都先寫好了，你只需要填兩個空格：<code>__init__</code>（宣告這個模型用到哪些層）跟 <code>forward</code>（資料怎麼流過這些層）。這種「父類別把通用流程都寫好，子類別只需要填寫特定細節」的設計方式，在軟體工程裡有個正式名稱叫 <strong>模板方法模式（Template Method Pattern）</strong>——框架控制整體流程，你只負責填入「這一題特有的部分」。</p>
+
+<h2>2. 為什麼 forward() 給你的自由，TensorFlow 的高階 API 給不了</h2>
+<p>因為 <code>forward()</code> 本質上就是一段普通的 Python 程式碼，你可以在裡面用任何 Python 語法——迴圈、條件判斷、甚至呼叫外部函式。這讓 PyTorch 很適合研究領域裡那些「結構會根據輸入動態改變」的模型。<code>Sequential</code> 這類高階 API 則是犧牲了這種彈性，換取「幾行就能定義完整模型」的速度——這正是「進階方向」子地圖裡要講到更複雜模型結構時，通常會改用更有彈性寫法的根本原因。</p>
+</div>
+
+<div class="nav-links">
+<a href="layers_activation.html">← 上一站：層與啟動函數</a>
+<a href="../index.html">回建立神經網路地圖 →</a>
+</div>
+</div>
+</body>
+</html>

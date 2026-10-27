@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loss 與 Optimizer｜訓練迴圈</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="container">
+<a class="back" href="../index.html">← 回訓練迴圈地圖</a>
+<span class="tag">第一站</span>
+<h1>Loss 與 Optimizer：打分數跟調整方向</h1>
+<p class="subtitle">回到「矇眼下山」的比喻：Loss 是「海拔高度」，Optimizer 是「決定怎麼走這一步」的那個人。這站把兩個角色講清楚。</p>
+
+<h2>Loss：一把尺，量「模型猜得多離譜」</h2>
+<p>模型做出一個預測，跟「正確答案」之間的差距，用一個數字表示出來，這個數字就是 <strong>Loss（損失）</strong>。Loss 越大，代表模型猜得越離譜；Loss 越接近 0，代表猜得越準。常見的 Loss 計算方式有很多種（例如「預測值跟正確值差多少的平方」），選哪一種取決於任務類型，但核心概念都一樣：<strong>用一個數字，具體量化「現在模型有多不準」</strong>。</p>
+
+<h2>Optimizer：決定「這一步該怎麼走」的策略</h2>
+<p>知道了梯度（上一張地圖「自動微分」學過，代表「往哪個方向調整、調整多少幅度最有效」），接下來要有人真正去執行「調整參數」這個動作——這就是 <strong>Optimizer（優化器）</strong> 的工作。最簡單的策略叫 <strong>SGD</strong>（隨機梯度下降）：每次就照梯度的方向，走一小步；更聰明的策略叫 <strong>Adam</strong>：會記住之前走過的方向，像有經驗的登山客一樣，走起來更穩、更快找到谷底，是目前最常用的預設選擇。</p>
+
+<h2>兩套框架怎麼寫</h2>
+<div class="framework-compare">
+<div class="fw-block">
+<div class="fw-label pytorch">PyTorch</div>
+<pre>import torch.nn as nn
+import torch.optim as optim
+
+loss_fn = nn.MSELoss()  # 選一把「量多離譜」的尺
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+# lr = learning rate，每一步走多大</pre>
+</div>
+<div class="fw-block">
+<div class="fw-label tensorflow">TensorFlow</div>
+<pre>from tensorflow.keras import losses, optimizers
+
+loss_fn = losses.MeanSquaredError()
+optimizer = optimizers.Adam(learning_rate=0.001)
+
+# 也可以直接用字串簡寫，Keras 會自動幫你找對應的物件
+# model.compile(loss='mse', optimizer='adam')</pre>
+</div>
+</div>
+
+<h2>learning rate：走一步要跨多大</h2>
+<p><code>lr</code>（learning rate，學習率）是這裡最重要、也最容易被忽略的一個設定：跨步太大（<code>lr</code> 太高），可能直接跨過山谷最低點，甚至越走越歪；跨步太小（<code>lr</code> 太低），要走非常非常多步才能到谷底，訓練會慢到不切實際。<code>0.001</code> 是個常見的起始值，但不是萬用數字，不同任務常常要自己試幾個數字才找得到合適的。</p>
+
+<h2>工作中真的會踩到的坑</h2>
+<div class="card" style="margin-bottom:0;">
+<h3>Loss 選錯，模型訓練「看起來正常」卻學不到東西</h3>
+<p>不同任務要配不同的 Loss——例如預測一個連續數字（像房價）跟分類一張圖片是貓是狗，該用的 Loss 完全不同。如果選錯 Loss 類型，程式通常 <strong>不會報錯</strong>，訓練看起來也會正常跑完、Loss 數字也會下降，但模型學到的東西可能完全沒有意義。這是深度學習裡最隱蔽的一類錯誤——跟前面幾站「形狀不對會直接報錯」不一樣，Loss 選錯只會讓最終結果莫名其妙地差，debug 起來特別花時間，值得在動手訓練前先確認清楚「這個任務該用哪種 Loss」。</p>
+</div>
+
+<div class="nav-links">
+<a href="../index.html">← 回訓練迴圈地圖</a>
+<a href="full_loop.html">下一站：完整訓練迴圈 →</a>
+</div>
+</div>
+</body>
+</html>

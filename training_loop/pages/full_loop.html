@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>完整訓練迴圈｜訓練迴圈</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="container">
+<a class="back" href="../index.html">← 回訓練迴圈地圖</a>
+<span class="tag">第二站（終點）</span>
+<h1>完整訓練迴圈：把積木全部串起來</h1>
+<p class="subtitle">張量、梯度、模型、Loss、Optimizer——前面每一站學的東西，到這裡全部派上用場，組成一個會「越練越準」的完整流程。</p>
+
+<h2>訓練，就是不斷重複這五個動作</h2>
+<div class="card">
+<p style="margin-bottom:0;">想像在練投籃：①先投一球（<strong>模型預測</strong>）②看球離籃框差多遠（<strong>算 Loss</strong>）③感覺一下手感哪裡該調整（<strong>算梯度</strong>）④照感覺調整一點點投球姿勢（<strong>Optimizer 更新參數</strong>）⑤清空剛剛的感覺，準備投下一球（<strong>清空梯度</strong>）。把這五個動作重複幾千、幾萬次，就是「訓練」在做的事。</p>
+</div>
+
+<h2>兩套框架怎麼寫：手刻 vs 一行指令</h2>
+<p>這裡是整個網站裡，兩套框架哲學差異表現得最明顯的地方：PyTorch 要你把上面五個動作 <strong>一行一行手刻出來</strong>；TensorFlow 的 Keras 把五個動作全部包進 <strong>一行 <code>model.fit()</code></strong> 裡。</p>
+<div class="framework-compare">
+<div class="fw-block">
+<div class="fw-label pytorch">PyTorch（手刻）</div>
+<pre>for epoch in range(100):          # 重複練習 100 輪
+    for x, y in dataloader:       # 每一輪，把資料分批餵進去
+
+        pred = model(x)                    # ① 預測
+        loss = loss_fn(pred, y)            # ② 算 Loss
+
+        optimizer.zero_grad()              # ⑤ 先清空上次的梯度
+        loss.backward()                    # ③ 算梯度
+        optimizer.step()                   # ④ 更新參數
+
+    print(f"epoch {epoch}, loss={loss.item()}")</pre>
+</div>
+<div class="fw-block">
+<div class="fw-label tensorflow">TensorFlow（一行指令）</div>
+<pre>model.compile(loss=loss_fn, optimizer=optimizer)
+
+model.fit(
+    x_train, y_train,
+    epochs=100,       # 重複練習 100 輪
+    batch_size=32,    # 每批餵 32 筆資料
+)
+# 上面五個動作，Keras 全部幫你包好了</pre>
+</div>
+</div>
+
+<div class="quote-box">
+ TensorFlow 也可以不用 <code>model.fit()</code>，改用 <code>GradientTape</code> 手刻一個跟 PyTorch 幾乎一樣的迴圈——「自動微分」子地圖裡提過這個寫法。這代表兩套框架其實都「兩種模式都支援」，差別只是 <strong>預設、慣用的寫法</strong> 不同：PyTorch 預設鼓勵你手刻（給你完全控制權），TensorFlow 預設鼓勵你用 <code>fit()</code>（給你速度），但兩邊都能切換到對方的風格。
+</div>
+
+<h2>為什麼 PyTorch 要你手刻這五行</h2>
+<p>看起來很麻煩，但手刻帶來的好處是：你可以在這五個動作中間，插入任何自己想做的事——例如每練習 10 輪就額外印一些除錯資訊、或是根據某個條件臨時調整 learning rate、或是只訓練模型的某一部分參數。<code>model.fit()</code> 幫你包好了方便，但也讓你比較難插手中間的細節；需要客製化訓練流程時，手刻的彈性就很重要。</p>
+
+<h2>工作中真的會踩到的坑</h2>
+<div class="card" style="margin-bottom:0;">
+<h3>忘記 optimizer.zero_grad()，梯度越滾越大</h3>
+<p>這是 PyTorch 新手最經典、幾乎每個人都踩過一次的坑：PyTorch 預設會把每次 <code>loss.backward()</code> 算出來的梯度 <strong>累加</strong> 在原本的梯度上，而不是覆蓋掉。如果忘記在每輪開始前呼叫 <code>optimizer.zero_grad()</code> 清空，梯度會一輪一輪疊加上去，數值越滾越大，導致參數更新的步伐越跳越誇張，訓練 Loss 不但沒下降，反而爆衝成一個很誇張的數字（甚至變成 <code>NaN</code>）。這也是為什麼前面的程式碼裡，<code>zero_grad()</code> 被標成動作⑤卻寫在迴圈最前面——養成「先清空、再算梯度」的固定順序習慣，可以完全避開這個坑。TensorFlow 的 <code>model.fit()</code> 幫你把這件事自動處理好了，所以只有手刻迴圈（包括 TensorFlow 自己的 <code>GradientTape</code> 手刻寫法）才需要特別注意這件事。</p>
+</div>
+
+<div class="nav-links">
+<a href="loss_optimizer.html">← 上一站：Loss 與 Optimizer</a>
+<a href="../index.html">回訓練迴圈地圖 →</a>
+</div>
+</div>
+</body>
+</html>

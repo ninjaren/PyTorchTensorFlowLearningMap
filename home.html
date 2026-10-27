@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PyTorch / TensorFlow 學習地圖｜總覽</title>
+<link rel="stylesheet" href="style.css">
+<style>
+ .container { max-width: 1180px; }
+ .grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+ gap: 14px;
+ margin-top: 1.6rem;
+ }
+ .map-card {
+ position: relative;
+ display: block;
+ background: var(--card-bg);
+ border: 1px solid var(--border);
+ border-radius: 12px;
+ padding: 16px 18px;
+ text-decoration: none;
+ color: var(--text);
+ transition: border-color 0.15s, transform 0.15s;
+ }
+ .map-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+ .map-card .icon { font-size: 1.5rem; }
+ .map-card h2 { margin: 0.35rem 0 0.25rem; border: none; padding: 0; font-size: 1.05rem; }
+ .map-card p { margin: 0; color: var(--text-muted); font-size: 0.82rem; line-height: 1.5; }
+ .map-card .status { display: inline-block; margin-top: 8px; font-size: 0.72rem; padding: 2px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+ .map-card .step {
+ position: absolute; top: -10px; left: -10px;
+ width: 26px; height: 26px; border-radius: 50%;
+ display: flex; align-items: center; justify-content: center;
+ background: var(--accent); color: #fff; font-size: 0.78rem; font-weight: 700;
+ box-shadow: 0 0 0 3px var(--bg);
+ }
+ .section-label { color: var(--text-muted); font-size: 0.95rem; margin: 2.2rem 0 0; }
+ .section-label:first-of-type { margin-top: 1.6rem; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>PyTorch / TensorFlow 學習地圖</h1>
+<p class="subtitle">深度學習框架聽起來很嚇人，其實拆開來看，每個概念都有生活中找得到的比喻。這份地圖每一站都用白話先講一次「這是在幹嘛」，再把 PyTorch 跟 TensorFlow 兩套寫法並排放在一起，讓你一次看懂兩種語言怎麼表達同一件事。</p>
+
+<div class="quote-box">
+<strong>學完這些，你能做什麼？</strong> 具體一點說：你會有能力做出一個圖片分類器（例如辨識手寫數字、檢測瑕疵品）、一個文字情緒分析或簡易客服機器人（用「常用函式庫地圖」教的 Hugging Face <code>transformers</code> 去微調現成的語言模型）、或任何「餵資料進去、模型吐出判斷」的應用——而且知道怎麼把訓練好的模型存檔、包成一個真正能被呼叫的服務。下面 1 → 6 是拆開來一塊一塊學的積木；如果想先看這些積木接起來長什麼樣，直接跳去看 <a href="capstone/index.html">完整範例</a>。
+</div>
+
+<p class="section-label">建議學習順序 1 → 6，從這裡依序往下走：</p>
+<div class="grid">
+<a class="map-card" href="tensors/index.html">
+<span class="step">1</span>
+<div class="icon"></div>
+<h2>張量基礎</h2>
+<p>張量其實就是「裝數字的容器」，從這裡開始，之後所有東西都是在張量上面做加工。</p>
+<span class="status">已完成</span>
+</a>
+
+<a class="map-card" href="autograd/index.html">
+<span class="step">2</span>
+<div class="icon"></div>
+<h2>自動微分</h2>
+<p>模型怎麼「知道」自己哪裡算錯、該往哪個方向調整——這是整個訓練能運作的核心機制。</p>
+<span class="status">已完成</span>
+</a>
+
+<a class="map-card" href="neural_networks/index.html">
+<span class="step">3</span>
+<div class="icon"></div>
+<h2>建立神經網路</h2>
+<p>把一層一層的運算像堆積木一樣組起來，PyTorch 跟 TensorFlow 各自用什麼積木盒。</p>
+<span class="status">已完成</span>
+</a>
+
+<a class="map-card" href="training_loop/index.html">
+<span class="step">4</span>
+<div class="icon"></div>
+<h2>訓練迴圈</h2>
+<p>模型怎麼一次又一次地「練習」，從亂猜到越猜越準——手刻迴圈跟一行指令兩種做法。</p>
+<span class="status">已完成</span>
+</a>
+
+<a class="map-card" href="data_pipeline/index.html">
+<span class="step">5</span>
+<div class="icon"></div>
+<h2>資料管線</h2>
+<p>餵資料給模型吃之前，怎麼分批、怎麼打亂順序，兩套框架各有自己的輸送帶設計。</p>
+<span class="status">已完成</span>
+</a>
+
+<a class="map-card" href="model_persistence/index.html">
+<span class="step">6</span>
+<div class="icon"></div>
+<h2>模型儲存與部署</h2>
+<p>訓練好的模型怎麼存成檔案、怎麼接到實際應用——銜接 AI Agent 地圖的部署內容。</p>
+<span class="status">已完成</span>
+</a>
+</div>
+
+<p class="section-label">六塊積木接起來長什麼樣：</p>
+<div class="grid">
+<a class="map-card" href="capstone/index.html">
+<div class="icon"></div>
+<h2>完整範例：手寫數字分類器</h2>
+<p>從下載真實資料、定義模型、訓練、存檔，到包成一支能被呼叫的函式——把前面六站串成一條完整的線，也是「學完這些到底能幹嘛」最直接的答案。</p>
+<span class="status">完整範例</span>
+</a>
+</div>
+
+<p class="section-label">延伸資源，不分先後、查閱用：</p>
+<div class="grid">
+<a class="map-card" href="roadmap/index.html">
+<div class="icon"></div>
+<h2>進階方向（路線圖）</h2>
+<p>CNN、RNN/Transformer、分散式訓練、ONNX 轉換——先搭骨架，之後想深入再回來查。</p>
+<span class="status">路線圖</span>
+</a>
+
+<a class="map-card" href="library_reference/index.html">
+<div class="icon"></div>
+<h2>常用函式庫地圖</h2>
+<p>torch.nn、tf.keras.layers 這些常見模組分別是幹什麼的——查閱用的辭典頁，不用照順序讀。</p>
+<span class="status">辭典</span>
+</a>
+</div>
+</div>
+</body>
+</html>

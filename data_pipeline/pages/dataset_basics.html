@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dataset 與 DataLoader｜資料管線</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="container">
+<a class="back" href="../index.html">← 回資料管線地圖</a>
+<span class="tag">第一站</span>
+<h1>Dataset 與 DataLoader：資料的包裝方式</h1>
+<p class="subtitle">模型沒辦法直接吃一個雜亂的資料夾或一份 CSV，需要先包裝成「固定格式」，框架才知道怎麼一筆一筆（或一批一批）把資料交給模型。</p>
+
+<h2>想像成一個「自動販賣機」</h2>
+<div class="card">
+<p style="margin-bottom:0;">你可以把 <strong>Dataset</strong> 想成補貨員：它知道「倉庫裡總共有幾筆資料」「要怎麼把第 N 筆資料找出來並處理好（例如把圖片讀進記憶體、做尺寸縮放）」。<strong>DataLoader</strong> 則是販賣機本身：它負責「自動一批一批把商品吐出來」給前面站點學到的訓練迴圈使用，中間要分幾批、要不要先打散順序，都是 DataLoader 的工作，你不用自己手動一筆一筆去拿。</p>
+</div>
+
+<h2>兩套框架怎麼寫</h2>
+<div class="framework-compare">
+<div class="fw-block">
+<div class="fw-label pytorch">PyTorch</div>
+<pre>from torch.utils.data import Dataset, DataLoader
+
+class MyDataset(Dataset):
+    def __init__(self, x, y):
+        self.x, self.y = x, y
+
+    def __len__(self):
+        return len(self.x)   # 倉庫裡總共幾筆
+
+    def __getitem__(self, idx):
+        return self.x[idx], self.y[idx]   # 怎麼拿出第idx筆
+
+dataset = MyDataset(x_train, y_train)
+loader = DataLoader(dataset, batch_size=32, shuffle=True)</pre>
+</div>
+<div class="fw-block">
+<div class="fw-label tensorflow">TensorFlow</div>
+<pre>import tensorflow as tf
+
+dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+dataset = dataset.shuffle(buffer_size=1000)
+dataset = dataset.batch(32)
+
+# tf.data.Dataset 把 PyTorch 分成兩個物件(Dataset+DataLoader)
+# 做的事，合併成一條「管線」用 .方法 一路串下去</pre>
+</div>
+</div>
+
+<div class="quote-box">
+ PyTorch 把「資料怎麼拿」（<code>Dataset</code>）跟「怎麼批次送出」（<code>DataLoader</code>）拆成兩個獨立物件；TensorFlow 的 <code>tf.data.Dataset</code> 把整段流程設計成一條可以用 <code>.shuffle()</code>、<code>.batch()</code> 一路串接下去的「管線」。概念一樣，只是 TensorFlow 的寫法更像「資料流水線」，PyTorch 更像「兩個分工明確的角色」。
+</div>
+
+<h2>工作中真的會踩到的坑</h2>
+<div class="card" style="margin-bottom:0;">
+<h3>__getitem__ 裡做太重的運算，訓練速度被拖垮</h3>
+<p>PyTorch 的 <code>__getitem__</code> 每次只處理一筆資料，很多人會把「讀圖片、做複雜的影像前處理」全部寫在這裡——如果這段運算很慢，GPU 常常會「等資料等到閒置」，白白浪費運算資源。這是訓練速度慢卻查不出原因時，很容易被忽略的一個檢查項目：先確認 GPU 使用率是不是常常掉到接近 0，如果是，問題往往不在模型本身，而是資料準備的速度跟不上。</p>
+</div>
+
+<div class="nav-links">
+<a href="../index.html">← 回資料管線地圖</a>
+<a href="batch_shuffle.html">下一站：批次與打散 →</a>
+</div>
+</div>
+</body>
+</html>

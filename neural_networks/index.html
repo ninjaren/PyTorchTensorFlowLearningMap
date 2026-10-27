@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>建立神經網路｜PyTorch / TensorFlow 學習地圖</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+ .map-wrap { max-width: 1200px; margin: 0 auto; }
+ svg { width: 100%; height: auto; display: block; }
+ .node rect { fill: var(--card-bg); stroke: var(--border); stroke-width: 2; rx: 16; transition: stroke 0.15s, stroke-width 0.15s; }
+ .node:hover rect { stroke: var(--accent); stroke-width: 4; }
+ .node text { fill: var(--text); font-family: inherit; }
+ .node .title { font-size: 20px; font-weight: 700; }
+ .node .sub { font-size: 14px; fill: var(--text-muted); }
+ .node a { cursor: pointer; }
+ .edge { stroke: var(--accent); stroke-width: 5; stroke-linecap: round; opacity: 0.55; fill: none; marker-end: url(#arrow); }
+ .legend { color: var(--text-muted); font-size: 1.1rem; margin-top: 1.8rem; }
+ .legend ol { padding-left: 1.5rem; }
+ .legend li { margin-bottom: 7px; }
+ .footer-links { margin-top: 2.8rem; padding-top: 1.4rem; border-top: 1px solid var(--border); font-size: 1.1rem; }
+</style>
+</head>
+<body>
+<div class="container map-wrap">
+<a class="back" href="../home.html">← 所有主題地圖</a>
+<h1>建立神經網路</h1>
+<p class="subtitle">神經網路聽起來很厲害，拆開來看就是「一層一層的數學運算疊在一起」，像堆積木一樣。這兩站講兩套框架各自提供的「積木盒」長什麼樣。</p>
+
+<svg viewBox="0 0 1200 280" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)"></path>
+</marker>
+</defs>
+<path class="edge" d="M 395,120 L 785,120" />
+
+<a xlink:href="pages/layers_activation.html">
+<g class="node" transform="translate(280,120)">
+<rect x="-105" y="-45" width="210" height="90"></rect>
+<text class="title" x="0" y="-8" text-anchor="middle">層與啟動函數</text>
+<text class="sub" x="0" y="22" text-anchor="middle">積木本身長什麼樣</text>
+</g>
+</a>
+
+<a xlink:href="pages/model_definition.html">
+<g class="node" transform="translate(900,120)">
+<rect x="-105" y="-45" width="210" height="90"></rect>
+<text class="title" x="0" y="-8" text-anchor="middle">定義一個模型</text>
+<text class="sub" x="0" y="22" text-anchor="middle">把積木疊起來</text>
+</g>
+</a>
+</svg>
+
+<div class="legend">
+<strong>建議學習順序：</strong>
+<ol>
+<li>層與啟動函數 —— 最基本的積木單位長什麼樣，為什麼需要「啟動函數」這個東西</li>
+<li>定義一個模型 ——<code>nn.Module</code> vs <code>tf.keras.Model</code>，兩套框架怎麼把積木組成完整模型</li>
+</ol>
+</div>
+
+<div class="footer-links">
+<a href="../home.html">回所有主題地圖</a>
+</div>
+</div>
+</body>
+</html>
